@@ -93,18 +93,21 @@ function Hud.create(): Hud
 	reveal.AnchorPoint = Vector2.new(0.5, 0.5)
 	reveal.Position = UDim2.fromScale(0.5, 0.28)
 	reveal.Size = UDim2.new(0.8, 0, 0, 56)
+	reveal.TextStrokeTransparency = 0 -- full outline so light rarity colors read against the sky
 	reveal.Text = ""
 
 	local revealSub = label("RevealSub", gui)
 	revealSub.AnchorPoint = Vector2.new(0.5, 0.5)
 	revealSub.Position = UDim2.new(0.5, 0, 0.28, 46)
 	revealSub.Size = UDim2.new(0.8, 0, 0, 32)
+	revealSub.TextStrokeTransparency = 0
 	revealSub.Text = ""
 
 	local upgrade = Instance.new("TextButton")
 	upgrade.Name = "Upgrade"
-	upgrade.AnchorPoint = Vector2.new(1, 0)
-	upgrade.Position = UDim2.new(1, -12, 0, 80)
+	-- Left middle: clear of the player list (top right) and the mobile thumbstick (bottom left).
+	upgrade.AnchorPoint = Vector2.new(0, 0.5)
+	upgrade.Position = UDim2.new(0, 12, 0.5, 0)
 	upgrade.Size = UDim2.fromOffset(190, 56)
 	upgrade.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
 	upgrade.Font = Enum.Font.GothamBold

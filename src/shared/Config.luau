@@ -96,7 +96,7 @@ Config.Throw = {
 }
 
 -- "walk": walk to the critter and use its prompt. "auto": it hops to your plot after the reveal.
-Config.CollectMode = "walk" :: "walk" | "auto"
+Config.CollectMode = "auto" :: "walk" | "auto"
 Config.AutoCollectDelaySeconds = 1.5
 Config.PendingTimeoutSeconds = 45 -- an uncollected critter wilts after this, so throws never lock up
 

@@ -95,9 +95,11 @@ function MapBuilder.build(): Folder
 			folder
 		).CanCollide =
 			true
+		-- Alternate sides so the signs don't stack in line when seen from the spawn.
+		local side = if i % 2 == 0 then -1 else 1
 		sign(
 			string.format("%s · %d studs", look.name, zone.minDistance),
-			pad + Vector3.new(width / 2 + 2, 0, startZ),
+			pad + Vector3.new(side * (width / 2 + 2), 0, startZ),
 			folder
 		)
 	end
