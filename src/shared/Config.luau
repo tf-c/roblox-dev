@@ -8,7 +8,7 @@
 --   * Power changes throw distance, and therefore zone and rarity. So Power must
 --     NEVER be sold for Robux (no paid x2 Power, no Power developer products).
 --   * Cash is never spent on a random roll. Cash buys fixed items only (see Upgrades).
---   * Players toss seeds at the ground; critters sprout from them. Nothing is thrown at creatures.
+--   * Players throw a toy at the ground; creatures come to it. Nothing is thrown at creatures.
 
 local Config = {}
 
@@ -43,9 +43,9 @@ Config.Zones = {
 
 -- Display name and ground color per zone.
 Config.ZoneLooks = {
-	lawn = { name = "Lawn", color = "#8fd16a" },
-	grove = { name = "Grove", color = "#3f9b4b" },
-	wildwood = { name = "Wildwood", color = "#24543a" },
+	lawn = { name = "Backyard", color = "#8fd16a" },
+	grove = { name = "Park", color = "#3f9b4b" },
+	wildwood = { name = "Meadow", color = "#24543a" },
 }
 
 export type Creature = {
@@ -55,17 +55,18 @@ export type Creature = {
 	color: string,
 }
 
--- Placeholder critters: 2 per zone. Income is cash per second while on the plot.
+-- Starter catboys (original designs, roster ids from roblox-researcher): 2 per zone.
+-- `color` is the ears, tail and hair. Income is cash per second while on the plot.
 Config.Creatures = {
-	sproutling = { name = "Sproutling", rarity = "common", income = 1, color = "#b6e388" },
-	budbun = { name = "Budbun", rarity = "rare", income = 4, color = "#f2a7c3" },
-	mossmole = { name = "Mossmole", rarity = "common", income = 3, color = "#6b8e4e" },
-	fernfox = { name = "Fernfox", rarity = "rare", income = 10, color = "#e07a3c" },
-	thornowl = { name = "Thornowl", rarity = "rare", income = 25, color = "#7a5a8c" },
-	bloomdrake = { name = "Bloomdrake", rarity = "epic", income = 80, color = "#d94fd9" },
+	pillow = { name = "Pillow", rarity = "common", income = 1, color = "#f2a65a" },
+	slipper = { name = "Slipper", rarity = "rare", income = 4, color = "#f48fb1" },
+	pickle = { name = "Pickle", rarity = "common", income = 3, color = "#2f2f36" },
+	caramel = { name = "Caramel", rarity = "rare", income = 10, color = "#f7c59f" },
+	satin = { name = "Satin", rarity = "rare", income = 25, color = "#5a5d66" },
+	linden = { name = "Linden", rarity = "epic", income = 80, color = "#c8a2e8" },
 } :: { [string]: Creature }
 
--- Derived lookup for Income.perSecond: critter id -> cash per second.
+-- Derived lookup for Income.perSecond: creature id -> cash per second.
 Config.CreatureIncome = {} :: { [string]: number }
 for id, creature in Config.Creatures do
 	Config.CreatureIncome[id] = creature.income
@@ -73,9 +74,9 @@ end
 
 -- Free, fixed spawn odds per zone. See POLICY RULES above.
 Config.ZoneTables = {
-	lawn = { { id = "sproutling", weight = 80 }, { id = "budbun", weight = 20 } },
-	grove = { { id = "mossmole", weight = 75 }, { id = "fernfox", weight = 25 } },
-	wildwood = { { id = "thornowl", weight = 85 }, { id = "bloomdrake", weight = 15 } },
+	lawn = { { id = "pillow", weight = 80 }, { id = "slipper", weight = 20 } },
+	grove = { { id = "pickle", weight = 75 }, { id = "caramel", weight = 25 } },
+	wildwood = { { id = "satin", weight = 85 }, { id = "linden", weight = 15 } },
 }
 
 Config.RarityColors = {
@@ -87,15 +88,15 @@ Config.RarityColors = {
 -- Player-facing theme words. The reskin changes these, not code. %s = creature name.
 Config.Text = {
 	collectAction = "Collect",
-	pendingBlocked = "Collect your critter first",
+	pendingBlocked = "Your catboy is still on the way",
 	wanderedOff = "%s wandered off",
-	walkHint = "Walk to your critter to collect it",
+	walkHint = "Walk to your catboy to collect it",
 	plotReleased = "Plot full: %s was released",
 	plotReplaced = "Plot full: %s replaced %s",
 }
 
--- The thing the player throws down the lane (client visual only).
-Config.Projectile = { name = "Seed", color = "#966432", size = 1.2 }
+-- The Toy the player throws down the lane (client visual only). It rests on a glowing ring for `restSeconds` after landing.
+Config.Projectile = { name = "Yarn ball", color = "#e2574c", size = 1.6, restSeconds = 2 }
 
 Config.Train = {
 	powerPerTrain = 1,
@@ -104,14 +105,17 @@ Config.Train = {
 
 Config.Throw = {
 	cooldownSeconds = 1.5,
-	arcSeconds = 1.2, -- seed flight time before the sprout pops
+	arcSeconds = 1.2, -- toy flight time before the arrival starts
 	arcHeight = 25,
 }
 
--- "walk": walk to the critter and use its prompt. "auto": it hops to your plot after the reveal.
+-- "walk": walk to the catboy and use its prompt. "auto": it hops to your plot after it arrives.
 Config.CollectMode = "auto" :: "walk" | "auto"
 Config.AutoCollectDelaySeconds = 1.5
-Config.PendingTimeoutSeconds = 45 -- an uncollected critter wilts after this, so throws never lock up
+-- Arrival: the creature runs in from the lane's side edge to the toy, then hops and turns to face the player.
+-- runSeconds + hopSeconds must stay under AutoCollectDelaySeconds (Config.spec checks), so throw pacing is unchanged.
+Config.Arrival = { runSeconds = 0.6, hopSeconds = 0.25, hopHeight = 1.5, edgeMargin = 2 }
+Config.PendingTimeoutSeconds = 45 -- an uncollected creature wanders off after this, so throws never lock up
 
 -- Same shape as Upgrade.Ladder (Config stays require-free).
 type UpgradeLadder = {

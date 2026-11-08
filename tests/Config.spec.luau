@@ -102,4 +102,74 @@ return {
 		Assert.truthy(p.size > 0, "size")
 		Assert.truthy(string.match(p.color, "^#%x%x%x%x%x%x$") ~= nil, "color")
 	end,
+
+	["starter catboys fill the six creature slots"] = function()
+		local tables: { [string]: { { string | number } } } = {
+			lawn = { { "pillow", 80 }, { "slipper", 20 } },
+			grove = { { "pickle", 75 }, { "caramel", 25 } },
+			wildwood = { { "satin", 85 }, { "linden", 15 } },
+		}
+		for zone, expected in tables do
+			for i, want in expected do
+				local entry = Config.ZoneTables[zone][i]
+				Assert.eq(entry.id, want[1], zone)
+				Assert.eq(entry.weight, want[2], zone)
+			end
+		end
+		local stats: { [string]: { string | number } } = {
+			pillow = { "common", 1 },
+			slipper = { "rare", 4 },
+			pickle = { "common", 3 },
+			caramel = { "rare", 10 },
+			satin = { "rare", 25 },
+			linden = { "epic", 80 },
+		}
+		for id, want in stats do
+			local def = Config.Creatures[id]
+			Assert.truthy(def ~= nil, id)
+			Assert.eq(def.rarity, want[1], id)
+			Assert.eq(def.income, want[2], id)
+		end
+		local count = 0
+		for _ in Config.Creatures do
+			count += 1
+		end
+		Assert.eq(count, 6)
+	end,
+
+	["zone names are Backyard, Park, Meadow"] = function()
+		Assert.eq(Config.ZoneLooks.lawn.name, "Backyard")
+		Assert.eq(Config.ZoneLooks.grove.name, "Park")
+		Assert.eq(Config.ZoneLooks.wildwood.name, "Meadow")
+	end,
+
+	["player-facing text never says critter or seed"] = function()
+		local texts: { string } = {}
+		for _, text in Config.Text :: { [string]: string } do
+			table.insert(texts, text)
+		end
+		table.insert(texts, Config.Projectile.name)
+		for _, def in Config.Creatures do
+			table.insert(texts, def.name)
+		end
+		for _, text in texts do
+			local lower = string.lower(text)
+			Assert.eq(string.find(lower, "critter", 1, true), nil, text)
+			Assert.eq(string.find(lower, "seed", 1, true), nil, text)
+		end
+	end,
+
+	["the toy is a yarn ball that rests after landing"] = function()
+		Assert.eq(Config.Projectile.name, "Yarn ball")
+		Assert.truthy(Config.Projectile.restSeconds > 0, "restSeconds")
+	end,
+
+	["arrival finishes before auto collect starts"] = function()
+		local a = Config.Arrival
+		Assert.truthy(a.runSeconds > 0, "runSeconds")
+		Assert.truthy(a.hopSeconds > 0, "hopSeconds")
+		Assert.truthy(a.hopHeight > 0, "hopHeight")
+		Assert.truthy(a.edgeMargin >= 0, "edgeMargin")
+		Assert.truthy(a.runSeconds + a.hopSeconds < Config.AutoCollectDelaySeconds, "timing budget")
+	end,
 }

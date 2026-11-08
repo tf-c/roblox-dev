@@ -14,6 +14,7 @@ local specs: { { name: string, cases: Spec } } = {
 	{ name = "Income", cases = require("./Income.spec") :: any },
 	{ name = "Plot", cases = require("./Plot.spec") :: any },
 	{ name = "Config", cases = require("./Config.spec") :: any },
+	{ name = "Arrival", cases = require("./Arrival.spec") :: any },
 	{ name = "Upgrade", cases = require("./Upgrade.spec") :: any },
 	{ name = "Pacing", cases = require("./Pacing.spec") :: any },
 }
