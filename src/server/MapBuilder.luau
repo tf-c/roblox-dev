@@ -102,6 +102,14 @@ function MapBuilder.build(): Folder
 		)
 	end
 
+	-- Ours must be the only spawn: a place template's spawn (e.g. Baseplate's, which sits
+	-- on the launch pad) can face players away from the lane. Runtime only; the place file is untouched.
+	for _, existing in Workspace:GetDescendants() do
+		if existing:IsA("SpawnLocation") then
+			existing:Destroy()
+		end
+	end
+
 	-- Launch pad and spawn just behind it, facing down the lane.
 	block(
 		"LaunchPad",
