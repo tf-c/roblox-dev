@@ -17,8 +17,16 @@ local EYES = Color3.fromHex("#222222")
 
 local warned: { [string]: boolean } = {}
 
-local function limb(name: string, size: Vector3, offset: CFrame, color: Color3, parent: Model): Part
-	local part = Instance.new("Part")
+-- `shape` lets a limb be another part type (the ears are wedges); default is a block.
+local function limb(
+	name: string,
+	size: Vector3,
+	offset: CFrame,
+	color: Color3,
+	parent: Model,
+	shape: BasePart?
+): BasePart
+	local part: BasePart = shape or Instance.new("Part")
 	part.Name = name
 	part.Size = size
 	part.CFrame = offset
@@ -33,7 +41,7 @@ end
 local function placeholder(creatureId: string): Model
 	local def = Config.Creatures[creatureId]
 	local coat = Color3.fromHex(def.color)
-	local outfit = coat:Lerp(Color3.new(1, 1, 1), 0.55)
+	local outfit = coat:Lerp(Color3.new(1, 1, 1), 0.3)
 
 	local model = Instance.new("Model")
 	model.Name = def.name
@@ -45,9 +53,25 @@ local function placeholder(creatureId: string): Model
 	limb("RightArm", Vector3.new(0.8, 1.9, 0.8), CFrame.new(1.45, 0.05, 0), outfit, model)
 	limb("Head", Vector3.new(1.8, 1.8, 1.6), CFrame.new(0, 1.9, 0), SKIN, model)
 	limb("Hair", Vector3.new(1.9, 0.5, 1.7), CFrame.new(0, 2.75, 0.05), coat, model)
-	local earSize = Vector3.new(0.45, 0.7, 0.35)
-	limb("LeftEar", earSize, CFrame.new(-0.6, 3.25, 0) * CFrame.Angles(0, 0, math.rad(20)), coat, model)
-	limb("RightEar", earSize, CFrame.new(0.6, 3.25, 0) * CFrame.Angles(0, 0, math.rad(-20)), coat, model)
+	-- Triangle ears: a wedge turned sideways shows its triangle to the front, straight edge outward.
+	local earSize = Vector3.new(0.3, 0.6, 0.6)
+	local ear = CFrame.new(0, 3.25, 0)
+	limb(
+		"LeftEar",
+		earSize,
+		ear * CFrame.new(-0.6, 0, 0) * CFrame.Angles(0, math.rad(-90), 0),
+		coat,
+		model,
+		Instance.new("WedgePart")
+	)
+	limb(
+		"RightEar",
+		earSize,
+		ear * CFrame.new(0.6, 0, 0) * CFrame.Angles(0, math.rad(90), 0),
+		coat,
+		model,
+		Instance.new("WedgePart")
+	)
 	local eyeSize = Vector3.new(0.25, 0.35, 0.1)
 	limb("LeftEye", eyeSize, CFrame.new(-0.4, 2.0, -0.81), EYES, model)
 	limb("RightEye", eyeSize, CFrame.new(0.4, 2.0, -0.81), EYES, model)
