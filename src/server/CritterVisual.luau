@@ -1,6 +1,6 @@
 --!strict
 -- Creature look: a Model with a name tag. Source, in order: a rig from ServerStorage.CreatureModels
--- named after the creature id, a catalog-bundle rig (CreatureRigs), else a blocky placeholder catboy. Used in the field and on plots.
+-- named after the creature id (make one with CreatureRigs.saveModel), the Config look rig (CreatureRigs), else a blocky placeholder catboy. Used in the field and on plots.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")

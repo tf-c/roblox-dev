@@ -3,8 +3,8 @@
 -- Pure data: no requires, no Roblox APIs (colors are hex strings), so Lune can test it.
 --
 -- POLICY RULES (from roblox-researcher policy_check.md), keep these true:
---   * Spawns stay free. ZoneTables weights are fixed; nothing bought with Robux,
---     or with cash bought with Robux, may change them.
+--   * Spawns stay free. Zone weights (`zones` on each creature, which build
+--     ZoneTables) are fixed; nothing bought with Robux, or with cash bought with Robux, may change them.
 --   * Power changes throw distance, and therefore zone and rarity. So Power must
 --     NEVER be sold for Robux (no paid x2 Power, no Power developer products).
 --   * Cash is never spent on a random roll. Cash buys fixed items only (see Upgrades).
@@ -48,40 +48,104 @@ Config.ZoneLooks = {
 	wildwood = { name = "Meadow", color = "#24543a" },
 }
 
+-- Same shape as Outfit.ManualLook / Outfit.Look (Config stays require-free).
+type ManualLook = {
+	hats: { number }?,
+	hair: { number }?,
+	face: { number }?,
+	neck: { number }?,
+	shoulder: { number }?,
+	front: { number }?,
+	back: { number }?,
+	waist: { number }?,
+	shirt: number?,
+	pants: number?,
+	graphicTShirt: number?,
+	faceId: number?,
+}
+export type CreatureLook = {
+	bundleId: number?,
+	outfitId: number?,
+	manual: ManualLook?,
+	accessoryIds: { number }?,
+	removeAccessoryIds: { number }?,
+	skinColor: string?,
+	scale: { height: number?, width: number?, head: number?, proportion: number?, bodyType: number? }?,
+}
+
 export type Creature = {
 	name: string,
 	rarity: string, -- "common" | "rare" | "epic" (Config.spec checks)
 	income: number,
 	color: string,
+	zones: { [string]: number }, -- zone id -> spawn weight in that zone
+	look: CreatureLook,
 }
 
 -- Starter catboys (original designs, roster ids from roblox-researcher): 2 per zone.
 -- `color` is the ears, tail and hair. Income is cash per second while on the plot.
-Config.Creatures = {
-	pillow = { name = "Pillow", rarity = "common", income = 1, color = "#f2a65a" },
-	slipper = { name = "Slipper", rarity = "rare", income = 4, color = "#f48fb1" },
-	pickle = { name = "Pickle", rarity = "common", income = 3, color = "#2f2f36" },
-	caramel = { name = "Caramel", rarity = "rare", income = 10, color = "#f7c59f" },
-	satin = { name = "Satin", rarity = "rare", income = 25, color = "#5a5d66" },
-	linden = { name = "Linden", rarity = "epic", income = 80, color = "#c8a2e8" },
-} :: { [string]: Creature }
-
--- Catalog bundle each catboy wears (server builds an R15 rig from it at start).
--- A creature with no entry, or whose bundle fails to load, keeps the placeholder rig.
--- accessoryIds: extra catalog accessories (e.g. cat ears) added on top of the bundle's outfit.
+--
+-- To add a catboy: copy an entry, give it a new id key, then set:
+--   name, rarity ("common", "rare" or "epic"), income (cash per second),
+--   zones: zone id -> spawn weight (lawn = Backyard, grove = Park, wildwood = Meadow),
+--   look: exactly one of bundleId (the number in the catalog bundle URL), outfitId, or
+--     manual = { hats = { ... }, hair = { ... }, shirt = ..., pants = ... }.
+--   Optional on top of any look: accessoryIds, removeAccessoryIds, skinColor ("#rrggbb"), scale.
+-- The server builds an R15 rig from `look` at start. A look that fails to load keeps the placeholder rig.
 -- Keep every look fully clothed: no collars, leashes, chains or chokers.
-export type CreatureBundle = { bundleId: number, accessoryIds: { number }? }
--- All items are Roblox-made (free bodies; Kitty Ears 1374269, Fuchsia Kitty Ears 22070807,
+-- All items below are Roblox-made (free bodies; Kitty Ears 1374269, Fuchsia Kitty Ears 22070807,
 -- Purple Cat Ears Headphones 244159564; Orange 187846604, Grey 170892848, Rainbow 212358027 cat tails).
 -- Avoid Oakley/John/Casey: their left leg detaches when the rig is anchored.
-Config.CreatureBundles = {
-	pillow = { bundleId = 722, accessoryIds = { 1374269, 187846604 } }, -- Denny
-	slipper = { bundleId = 605, accessoryIds = { 22070807, 170892848 } }, -- Dennis
-	pickle = { bundleId = 608, accessoryIds = { 1374269, 170892848 } }, -- Kenneth
-	caramel = { bundleId = 109, accessoryIds = { 1374269, 187846604 } }, -- ROBLOX Boy
-	satin = { bundleId = 573, accessoryIds = { 1374269, 170892848 } }, -- Oliver
-	linden = { bundleId = 572, accessoryIds = { 244159564, 212358027 } }, -- Summer
-} :: { [string]: CreatureBundle }
+Config.Creatures = {
+	pillow = {
+		name = "Pillow",
+		rarity = "common",
+		income = 1,
+		color = "#f2a65a",
+		zones = { lawn = 80 },
+		look = { bundleId = 722, accessoryIds = { 1374269, 187846604 } }, -- Denny, Kitty Ears, orange tail
+	},
+	slipper = {
+		name = "Slipper",
+		rarity = "rare",
+		income = 4,
+		color = "#f48fb1",
+		zones = { lawn = 20 },
+		look = { bundleId = 605, accessoryIds = { 22070807, 170892848 } }, -- Dennis, Fuchsia Kitty Ears, grey tail
+	},
+	pickle = {
+		name = "Pickle",
+		rarity = "common",
+		income = 3,
+		color = "#2f2f36",
+		zones = { grove = 75 },
+		look = { bundleId = 608, accessoryIds = { 1374269, 170892848 } }, -- Kenneth, Kitty Ears, grey tail
+	},
+	caramel = {
+		name = "Caramel",
+		rarity = "rare",
+		income = 10,
+		color = "#f7c59f",
+		zones = { grove = 25 },
+		look = { bundleId = 109, accessoryIds = { 1374269, 187846604 } }, -- ROBLOX Boy, Kitty Ears, orange tail
+	},
+	satin = {
+		name = "Satin",
+		rarity = "rare",
+		income = 25,
+		color = "#5a5d66",
+		zones = { wildwood = 85 },
+		look = { bundleId = 573, accessoryIds = { 1374269, 170892848 } }, -- Oliver, Kitty Ears, grey tail
+	},
+	linden = {
+		name = "Linden",
+		rarity = "epic",
+		income = 80,
+		color = "#c8a2e8",
+		zones = { wildwood = 15 },
+		look = { bundleId = 572, accessoryIds = { 244159564, 212358027 } }, -- Summer, Cat Ears Headphones, rainbow tail
+	},
+} :: { [string]: Creature }
 
 -- Derived lookup for Income.perSecond: creature id -> cash per second.
 Config.CreatureIncome = {} :: { [string]: number }
@@ -89,12 +153,25 @@ for id, creature in Config.Creatures do
 	Config.CreatureIncome[id] = creature.income
 end
 
--- Free, fixed spawn odds per zone. See POLICY RULES above.
-Config.ZoneTables = {
-	lawn = { { id = "pillow", weight = 80 }, { id = "slipper", weight = 20 } },
-	grove = { { id = "pickle", weight = 75 }, { id = "caramel", weight = 25 } },
-	wildwood = { { id = "satin", weight = 85 }, { id = "linden", weight = 15 } },
-}
+-- Free, fixed spawn odds per zone, built from each creature's `zones`. See POLICY RULES above.
+-- Heaviest weight first, ties by id, so the order is stable for the seeded tests.
+Config.ZoneTables = {} :: { [string]: { { id: string, weight: number } } }
+for _, zone in Config.Zones do
+	local entries: { { id: string, weight: number } } = {}
+	for id, creature in Config.Creatures do
+		local weight = creature.zones[zone.id]
+		if weight then
+			table.insert(entries, { id = id, weight = weight })
+		end
+	end
+	table.sort(entries, function(a, b)
+		if a.weight ~= b.weight then
+			return a.weight > b.weight
+		end
+		return a.id < b.id
+	end)
+	Config.ZoneTables[zone.id] = entries
+end
 
 Config.RarityColors = {
 	common = "#d9d9d9",

@@ -13,6 +13,7 @@ Context: the theme is pivoting from "toss seeds, critters sprout" to "throw a to
 | 003 | [Creatures as models + theme text in Config (reskin seam)](003-reskin-seam.md) | P1 | M | 001, 002 | DONE |
 | 004 | [Spike: design saving and a server-trusted meter](004-saving-spike.md) | P2 | M | 003, catboy ids decided | TODO |
 | 005 | [Catboys run in to a yarn ball, 6-catboy starter slice](005-catboy-arrival.md) | P1 | M | 003 | DONE |
+| 007 | [One Config entry per catboy and a command-bar rig maker](007-creature-maker.md) | P1 | M | 006 | DONE |
 | 006 | [Catboys wear R15 rigs built from catalog bundles](006-bundle-rigs.md) | P1 | M | 003, 005 | DONE (fallback verified in Studio; bundle and failure paths wait for real bundle ids) |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJECTED (with one-line rationale, finding fixed independently or approach abandoned)

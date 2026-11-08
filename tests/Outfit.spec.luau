@@ -50,4 +50,40 @@ return {
 	["nothing plus nothing is empty"] = function()
 		Assert.eq(Outfit.withAccessories("", {}), "")
 	end,
+
+	["a bundle id is a bundle look"] = function()
+		Assert.eq(Outfit.source({ bundleId = 722 }), "bundle")
+	end,
+
+	["an outfit id is an outfit look"] = function()
+		Assert.eq(Outfit.source({ outfitId = 5 }), "outfit")
+	end,
+
+	["a manual table is a manual look"] = function()
+		Assert.eq(Outfit.source({ manual = {} }), "manual")
+	end,
+
+	["a look with no source is nil"] = function()
+		Assert.eq(Outfit.source({}), nil)
+	end,
+
+	["a look with two sources is nil"] = function()
+		Assert.eq(Outfit.source({ bundleId = 1, outfitId = 2 }), nil)
+	end,
+
+	["manual lists and ids map to description properties"] = function()
+		local result = Outfit.manualProperties({ hats = { 1, 2 }, waist = { 9 }, shirt = 77 })
+		Assert.eq(result.HatAccessory, "1,2")
+		Assert.eq(result.WaistAccessory, "9")
+		Assert.eq(result.Shirt, 77)
+		local count = 0
+		for _ in result do
+			count += 1
+		end
+		Assert.eq(count, 3)
+	end,
+
+	["an empty manual look has no properties"] = function()
+		Assert.eq(next(Outfit.manualProperties({})), nil)
+	end,
 }

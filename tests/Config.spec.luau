@@ -2,6 +2,7 @@
 -- Sanity checks on the balance tables so a typo fails here, not mid-playtest.
 local Assert = require("./assert")
 local Config = require("../src/shared/Config")
+local Outfit = require("../src/shared/Outfit")
 
 local RARITIES = { common = true, rare = true, epic = true }
 
@@ -173,14 +174,80 @@ return {
 		Assert.truthy(a.runSeconds + a.hopSeconds < Config.AutoCollectDelaySeconds, "timing budget")
 	end,
 
-	["creature bundles name known creatures and valid ids"] = function()
-		for id, look in Config.CreatureBundles do
-			Assert.truthy(Config.Creatures[id] ~= nil, "unknown creature " .. id)
-			Assert.truthy(look.bundleId > 0 and look.bundleId % 1 == 0, "bundleId on " .. id)
-			local accessoryIds: { number } = look.accessoryIds or {}
-			for _, accessoryId in accessoryIds do
-				Assert.truthy(accessoryId > 0 and accessoryId % 1 == 0, "accessoryId on " .. id)
+	["every creature has a valid look"] = function()
+		local function validId(value: any, label: string)
+			Assert.truthy(type(value) == "number" and value > 0 and value % 1 == 0, label)
+		end
+		-- Typos in these keys pass the type checker (casts allow extra keys), so catch them here.
+		local lookKeys = {
+			bundleId = true,
+			outfitId = true,
+			manual = true,
+			accessoryIds = true,
+			removeAccessoryIds = true,
+			skinColor = true,
+			scale = true,
+		}
+		local scaleKeys = { height = true, width = true, head = true, proportion = true, bodyType = true }
+		for id, def in Config.Creatures do
+			local look = def.look
+			for field in look :: { [string]: any } do
+				Assert.truthy(lookKeys[field], "unknown look field " .. field .. " on " .. id)
 			end
+			if look.manual then
+				local given, mapped = 0, 0
+				for _ in look.manual :: { [string]: any } do
+					given += 1
+				end
+				for _ in Outfit.manualProperties(look.manual) do
+					mapped += 1
+				end
+				Assert.eq(mapped, given, "unknown manual field on " .. id)
+			end
+			Assert.truthy(Outfit.source(look) ~= nil, "look source on " .. id)
+			if look.bundleId then
+				validId(look.bundleId, "bundleId on " .. id)
+			end
+			if look.outfitId then
+				validId(look.outfitId, "outfitId on " .. id)
+			end
+			local lists: { { number } } = { look.accessoryIds or {}, look.removeAccessoryIds or {} }
+			for _, list in lists do
+				for _, assetId in list do
+					validId(assetId, "accessory id on " .. id)
+				end
+			end
+			for field, value in (look.manual or {}) :: { [string]: any } do
+				if type(value) == "table" then
+					for _, assetId in value do
+						validId(assetId, field .. " on " .. id)
+					end
+				else
+					validId(value, field .. " on " .. id)
+				end
+			end
+			if look.skinColor then
+				Assert.truthy(string.match(look.skinColor, "^#%x%x%x%x%x%x$") ~= nil, "skinColor on " .. id)
+			end
+			for field, value in (look.scale or {}) :: { [string]: number } do
+				Assert.truthy(scaleKeys[field] and value > 0, "scale " .. field .. " on " .. id)
+			end
+		end
+	end,
+
+	["every creature is found in at least one known zone"] = function()
+		local zoneIds: { [string]: boolean } = {}
+		for _, zone in Config.Zones do
+			zoneIds[zone.id] = true
+		end
+		for id, def in Config.Creatures do
+			local count = 0
+			for zoneId, weight in def.zones do
+				count += 1
+				Assert.truthy(zoneIds[zoneId], "unknown zone " .. zoneId .. " on " .. id)
+				Assert.truthy(weight > 0, "weight in " .. zoneId .. " on " .. id)
+			end
+			Assert.truthy(count > 0, "no zones on " .. id)
 		end
 	end,
 }
