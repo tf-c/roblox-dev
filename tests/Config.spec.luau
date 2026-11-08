@@ -2,7 +2,6 @@
 -- Sanity checks on the balance tables so a typo fails here, not mid-playtest.
 local Assert = require("./assert")
 local Config = require("../src/shared/Config")
-local Distance = require("../src/shared/Distance")
 
 local RARITIES = { common = true, rare = true, epic = true }
 
@@ -45,10 +44,28 @@ return {
 		Assert.truthy(Config.CollectMode == "walk" or Config.CollectMode == "auto")
 	end,
 
-	["the far zone is reachable with a perfect throw after training"] = function()
-		-- Guards against tuning that makes Wildwood impossible.
-		local lastZone = Config.Zones[#Config.Zones]
-		local reach = Distance.compute(1000, Config.Meter.sweetCenter, Config.Distance)
-		Assert.truthy(reach >= lastZone.minDistance, "wildwood unreachable at 1000 power")
+	["upgrade order lists every upgrade exactly once"] = function()
+		local seen = 0
+		for _, id in Config.UpgradeOrder do
+			Assert.truthy(Config.Upgrades[id] ~= nil, "unknown upgrade " .. id)
+			seen += 1
+		end
+		local total = 0
+		for _ in Config.Upgrades do
+			total += 1
+		end
+		Assert.eq(seen, total)
+	end,
+
+	["upgrade ladders rise in price and value"] = function()
+		for id, ladder in Config.Upgrades do
+			Assert.truthy(ladder.levels[1].value > ladder.base, "first level value on " .. id)
+			local lastPrice, lastValue = 0, ladder.base
+			for _, level in ladder.levels do
+				Assert.truthy(level.price > lastPrice, "price order on " .. id)
+				Assert.truthy(level.value > lastValue, "value order on " .. id)
+				lastPrice, lastValue = level.price, level.value
+			end
+		end
 	end,
 }

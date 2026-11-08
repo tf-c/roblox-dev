@@ -3,7 +3,10 @@
 -- Bottom-center controls so they clear the mobile thumbstick (left) and jump button (right).
 
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
+
+local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"))
 
 export type Hud = {
 	gui: ScreenGui,
@@ -11,7 +14,7 @@ export type Hud = {
 	toast: TextLabel,
 	reveal: TextLabel,
 	revealSub: TextLabel,
-	upgrade: TextButton,
+	upgrades: { [string]: TextButton },
 	meter: Frame,
 	sweet: Frame,
 	marker: Frame,
@@ -103,18 +106,23 @@ function Hud.create(): Hud
 	revealSub.TextStrokeTransparency = 0
 	revealSub.Text = ""
 
-	local upgrade = Instance.new("TextButton")
-	upgrade.Name = "Upgrade"
-	-- Left middle: clear of the player list (top right) and the mobile thumbstick (bottom left).
-	upgrade.AnchorPoint = Vector2.new(0, 0.5)
-	upgrade.Position = UDim2.new(0, 12, 0.5, 0)
-	upgrade.Size = UDim2.fromOffset(190, 56)
-	upgrade.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
-	upgrade.Font = Enum.Font.GothamBold
-	upgrade.TextColor3 = Color3.new(1, 1, 1)
-	upgrade.TextScaled = true
-	corner(upgrade, 10)
-	upgrade.Parent = gui
+	local upgrades: { [string]: TextButton } = {}
+	local count = #Config.UpgradeOrder
+	for i, id in Config.UpgradeOrder do
+		local button = Instance.new("TextButton")
+		button.Name = "Upgrade_" .. id
+		-- Left middle: clear of the player list (top right) and the mobile thumbstick (bottom left).
+		button.AnchorPoint = Vector2.new(0, 0.5)
+		button.Position = UDim2.new(0, 12, 0.5, (i - (count + 1) / 2) * 64)
+		button.Size = UDim2.fromOffset(190, 56)
+		button.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+		button.Font = Enum.Font.GothamBold
+		button.TextColor3 = Color3.new(1, 1, 1)
+		button.TextScaled = true
+		corner(button, 10)
+		button.Parent = gui
+		upgrades[id] = button
+	end
 
 	-- Timing meter: wide bar above the two buttons, sweet spot in the middle.
 	local meter = Instance.new("Frame")
@@ -164,7 +172,7 @@ function Hud.create(): Hud
 		toast = toast,
 		reveal = reveal,
 		revealSub = revealSub,
-		upgrade = upgrade,
+		upgrades = upgrades,
 		meter = meter,
 		sweet = sweet,
 		marker = marker,

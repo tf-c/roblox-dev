@@ -1,7 +1,7 @@
 --!strict
 -- In-memory player state for the prototype. Saving waits until the loop proves fun.
 -- leaderstats mirror Power and Cash; attributes on the Player tell the client
--- what it can do (HasPending, Upgraded, PlotCount).
+-- what it can do (HasPending, PlotCount, and one <upgradeId>Level per upgrade ladder).
 
 export type Pending = {
 	token: number,
@@ -14,7 +14,7 @@ export type State = {
 	cash: number,
 	plot: { [number]: string },
 	pending: Pending?,
-	upgraded: boolean,
+	levels: { [string]: number },
 	lastThrow: number,
 }
 
@@ -35,7 +35,7 @@ function PlayerState.add(player: Player)
 		cash = 0,
 		plot = {},
 		pending = nil,
-		upgraded = false,
+		levels = { trowel = 0, plotSlots = 0 },
 		lastThrow = -math.huge,
 	}
 	states[player] = state
@@ -84,7 +84,9 @@ function PlayerState.sync(player: Player)
 		count += 1
 	end
 	player:SetAttribute("HasPending", state.pending ~= nil)
-	player:SetAttribute("Upgraded", state.upgraded)
+	for id, level in state.levels do
+		player:SetAttribute(id .. "Level", level)
+	end
 	player:SetAttribute("PlotCount", count)
 end
 

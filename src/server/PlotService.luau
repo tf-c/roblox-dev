@@ -1,12 +1,13 @@
 --!strict
--- Each player gets a plot with Config.Plot.slots pedestals. Critters on the plot
--- pay Income.perSecond every second. Also handles the one cash upgrade.
+-- Each player gets a plot with pedestals; the plotSlots upgrade unlocks them. Critters on the plot
+-- pay Income.perSecond every second. Also handles cash upgrades.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Income = require(ReplicatedStorage.Shared.Income)
 local Plot = require(ReplicatedStorage.Shared.Plot)
+local Upgrade = require(ReplicatedStorage.Shared.Upgrade)
 local CritterVisual = require(script.Parent.CritterVisual)
 local MapBuilder = require(script.Parent.MapBuilder)
 local PlayerState = require(script.Parent.PlayerState)
@@ -36,6 +37,22 @@ local function freeIndex(): number
 	return i
 end
 
+local function slotCount(state: PlayerState.State): number
+	return Upgrade.value(Config.Upgrades.plotSlots, state.levels.plotSlots)
+end
+
+-- Dim the pedestals the player hasn't unlocked yet.
+local function showLockedSlots(player: Player)
+	local plot, state = plots[player], PlayerState.get(player)
+	if not plot or not state then
+		return
+	end
+	local unlocked = slotCount(state)
+	for i, ped in plot.pedestals do
+		ped.Transparency = if i <= unlocked then 0 else 0.75
+	end
+end
+
 local function showCritter(plot: PlotVisual, slot: number, creatureId: string)
 	local old = plot.critters[slot]
 	if old then
@@ -52,6 +69,7 @@ function PlotService.add(player: Player)
 	local index = freeIndex()
 	local model, pedestals = MapBuilder.buildPlot(index, player.DisplayName)
 	plots[player] = { index = index, model = model, pedestals = pedestals, critters = {} }
+	showLockedSlots(player)
 end
 
 function PlotService.remove(player: Player)
@@ -72,7 +90,7 @@ function PlotService.place(player: Player, creatureId: string)
 	end
 
 	local name = Config.Creatures[creatureId].name
-	local slot = Plot.choose(state.plot, creatureId, Config.CreatureIncome, Config.Plot.slots)
+	local slot = Plot.choose(state.plot, creatureId, Config.CreatureIncome, slotCount(state))
 	if slot == nil then
 		notify(player, string.format("Plot full: %s was released", name))
 		return
@@ -94,32 +112,34 @@ function PlotService.plotCenter(player: Player): Vector3?
 end
 
 function PlotService.init()
-	Remotes.buyUpgrade.OnServerEvent:Connect(function(player: Player)
+	Remotes.buyUpgrade.OnServerEvent:Connect(function(player: Player, upgradeId: any)
 		local state = PlayerState.get(player)
-		if not state or state.upgraded then
+		if not state or type(upgradeId) ~= "string" then
 			return
 		end
-		if state.cash < Config.Upgrade.price then
-			notify(
-				player,
-				string.format(
-					"Need %d cash for the %s",
-					Config.Upgrade.price,
-					string.lower(Config.Upgrade.name)
-				)
-			)
+		local ladder = Config.Upgrades[upgradeId]
+		if not ladder then
 			return
 		end
-		state.cash -= Config.Upgrade.price
-		state.upgraded = true
+		local level = state.levels[upgradeId] or 0
+		local price = Upgrade.nextPrice(ladder, level)
+		if price == nil then
+			notify(player, string.format("%s is maxed", ladder.name))
+			return
+		end
+		if state.cash < price then
+			notify(player, string.format("Need %d cash", price))
+			return
+		end
+		state.cash -= price
+		state.levels[upgradeId] = level + 1
 		PlayerState.sync(player)
+		if upgradeId == "plotSlots" then
+			showLockedSlots(player)
+		end
 		notify(
 			player,
-			string.format(
-				"Bought the %s: %s",
-				string.lower(Config.Upgrade.name),
-				string.lower(Config.Upgrade.description)
-			)
+			string.format("Bought %s: " .. ladder.text, ladder.name, Upgrade.value(ladder, level + 1))
 		)
 	end)
 

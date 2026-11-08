@@ -7,7 +7,7 @@
 --     or with cash bought with Robux, may change them.
 --   * Power changes throw distance, and therefore zone and rarity. So Power must
 --     NEVER be sold for Robux (no paid x2 Power, no Power developer products).
---   * Cash is never spent on a random roll. Cash buys fixed items only (see Upgrade).
+--   * Cash is never spent on a random roll. Cash buys fixed items only (see Upgrades).
 --   * Players toss seeds at the ground; critters sprout from them. Nothing is thrown at creatures.
 
 local Config = {}
@@ -29,12 +29,12 @@ Config.MeterMotion = {
 -- distance = (baseDistance + powerScale * sqrt(power)) * meterMult, in studs.
 Config.Distance = {
 	baseDistance = 20,
-	powerScale = 2,
+	powerScale = 1.25,
 	meter = Config.Meter,
 }
 
 -- Ordered by ascending minDistance (studs from the launch pad).
--- Perfect throw reaches grove at ~100 power and wildwood at ~900 power.
+-- Perfect throw reaches grove at ~256 power and wildwood at ~2304 power.
 Config.Zones = {
 	{ id = "lawn", minDistance = 0 },
 	{ id = "grove", minDistance = 60 },
@@ -100,18 +100,41 @@ Config.CollectMode = "auto" :: "walk" | "auto"
 Config.AutoCollectDelaySeconds = 1.5
 Config.PendingTimeoutSeconds = 45 -- an uncollected critter wilts after this, so throws never lock up
 
-Config.Plot = {
-	slots = 6,
+-- Same shape as Upgrade.Ladder (Config stays require-free).
+type UpgradeLadder = {
+	name: string,
+	text: string,
+	base: number,
+	levels: { { price: number, value: number } },
 }
 
--- The one cash upgrade. Fixed price, fixed effect.
-Config.Upgrade = {
-	id = "sturdyTrowel",
-	name = "Sturdy trowel",
-	description = "Training gives 2x power",
-	price = 250,
-	powerMultiplier = 2,
-}
+-- Cash upgrade ladders. Fixed prices, fixed effects (see POLICY RULES). Tuned by tests/Pacing.spec.luau:
+-- first buy < 1 min, wildwood ~5 min, last buy ~10 min for a good player.
+-- `text` formats the value a level gives, for the HUD button.
+Config.Upgrades = {
+	trowel = {
+		name = "Trowel",
+		text = "%dx training",
+		base = 1,
+		levels = { { price = 300, value = 2 }, { price = 3000, value = 3 }, { price = 20000, value = 4 } },
+	},
+	plotSlots = {
+		name = "Plot",
+		text = "%d slots",
+		base = 3,
+		levels = {
+			{ price = 150, value = 4 },
+			{ price = 600, value = 5 },
+			{ price = 2000, value = 6 },
+			{ price = 6000, value = 7 },
+			{ price = 20000, value = 8 },
+			{ price = 60000, value = 9 },
+		},
+	},
+} :: { [string]: UpgradeLadder }
+
+-- HUD button order, top to bottom.
+Config.UpgradeOrder = { "trowel", "plotSlots" }
 
 -- Placeholder map layout (studs). The lane runs along +Z from the pad.
 Config.Map = {

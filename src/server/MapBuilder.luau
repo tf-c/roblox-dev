@@ -6,6 +6,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local Upgrade = require(ReplicatedStorage.Shared.Upgrade)
 
 local MapBuilder = {}
 
@@ -147,7 +148,7 @@ function MapBuilder.landPoint(distance: number, sideways: number): Vector3
 	return pad + Vector3.new(x, GROUND_TOP + STRIP_THICKNESS, z)
 end
 
--- Builds plot `index` (0-based) with `slots` pedestals. Returns the pedestal parts in slot order.
+-- Builds plot `index` (0-based) with the maximum number of pedestals (locked ones are dimmed by PlotService). Returns the pedestal parts in slot order.
 function MapBuilder.buildPlot(index: number, ownerName: string): (Model, { BasePart })
 	local origin = v3(Config.Map.plotPosition) - Vector3.new(index * PLOT_SPACING, 0, 0)
 	local model = Instance.new("Model")
@@ -155,19 +156,19 @@ function MapBuilder.buildPlot(index: number, ownerName: string): (Model, { BaseP
 
 	block(
 		"Floor",
-		Vector3.new(24, 0.4, 18),
+		Vector3.new(24, 0.4, 26),
 		origin + Vector3.new(0, 0.2, 0),
 		Color3.fromRGB(150, 110, 70),
 		model
 	)
-	sign(ownerName .. "'s plot", origin + Vector3.new(0, 0, -10), model)
+	sign(ownerName .. "'s plot", origin + Vector3.new(0, 0, -14), model)
 
 	local pedestals: { BasePart } = {}
 	local cols = 3
-	for slot = 1, Config.Plot.slots do
+	for slot = 1, Upgrade.maxValue(Config.Upgrades.plotSlots) do
 		local col = (slot - 1) % cols
 		local row = (slot - 1) // cols
-		local pos = origin + Vector3.new((col - 1) * 7, 1, (row - 0.5) * 8)
+		local pos = origin + Vector3.new((col - 1) * 7, 1, (row - 1) * 8)
 		local ped =
 			block("Pedestal_" .. slot, Vector3.new(4, 1.2, 4), pos, Color3.fromRGB(220, 210, 190), model)
 		table.insert(pedestals, ped)

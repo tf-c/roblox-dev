@@ -4,6 +4,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local Upgrade = require(ReplicatedStorage.Shared.Upgrade)
 local PlayerState = require(script.Parent.PlayerState)
 local RateLimit = require(script.Parent.RateLimit)
 local Remotes = require(script.Parent.Remotes)
@@ -18,7 +19,7 @@ function TrainService.init()
 		if not state or not limiter:allow(player) then
 			return
 		end
-		local mult = if state.upgraded then Config.Upgrade.powerMultiplier else 1
+		local mult = Upgrade.value(Config.Upgrades.trowel, state.levels.trowel)
 		state.power += Config.Train.powerPerTrain * mult
 		PlayerState.sync(player)
 	end)
