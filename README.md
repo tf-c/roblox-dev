@@ -34,12 +34,13 @@ It saves the rig to `ServerStorage.CreatureModels.pillow`. A saved model overrid
 
 ### The maker panel
 
-In a Studio play test, the place owner can press M to open the catboy maker (it never exists in a live game or for other players). It has six sections:
+In a Studio play test, the place owner can press M to open the catboy maker, a full-screen editor (it never exists in a live game or for other players). The catalog is on the left, a 3D preview of the catboy is in the middle (drag to spin, scroll to zoom), and the outfit and details are on the right. While it is open the game HUD is hidden and the character can't walk. Press M again to close it.
 
-- Search: find Roblox-made bundles, accessories, shirts and pants in the catalog; click a result to put it on the rig.
+- Top row: "New catboy" starts blank, and any catboy name loads that Config entry into the editor. "Make entry" then prints a replacement entry to paste over the old one.
+- Search (left): find Roblox-made bundles, accessories, shirts and pants in the catalog; click a result to put it on the rig.
 - On the rig: what the rig wears now. Remove an item with its x, and restore removed ones from the Removed row.
 - Skin and Scale: skin color swatches (or a hex code) and sliders for height, width, head, proportion and body type.
 - Details: id, name, rarity, income, ears and hair color, and the zones with weights.
 - Config entry: "Make entry" checks the details and prints a ready-to-paste entry in the panel and the Output window.
 
-A rig appears 8 studs in front of you and updates as you edit. The panel never writes files: paste the entry into `Config.Creatures` by hand. Besides `bundleId`, a look can take `shirt` and `pants` (classic clothing catalog ids) on top of any source.
+The preview updates as you edit. A hand-saved `ServerStorage.CreatureModels.<id>` still overrides the Config look in game, and the editor shows the Config look. The panel never writes files: paste the entry into `Config.Creatures` by hand. Besides `bundleId`, a look can take `shirt` and `pants` (classic clothing catalog ids) on top of any source.

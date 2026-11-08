@@ -1,6 +1,7 @@
 --!strict
--- Catboy maker panel (Studio play tests, place owner only; press M). Searches the catalog, previews the
--- look on a server-built rig and prints a Config.Creatures entry to paste by hand. Never writes files.
+-- Catboy maker (Studio play tests, place owner only; press M): a full-screen editor. Searches the catalog,
+-- shows the look on a live 3D preview of a server-built rig, can load any Config.Creatures catboy, and
+-- prints a Config.Creatures entry to paste by hand. Never writes files.
 
 local AvatarEditorService = game:GetService("AvatarEditorService")
 local Players = game:GetService("Players")
@@ -20,7 +21,8 @@ local BUTTON = Color3.fromRGB(70, 70, 95)
 local ON = Color3.fromRGB(80, 140, 220)
 local RED = Color3.fromRGB(255, 110, 110)
 local GREY = Color3.fromRGB(200, 200, 210)
-local TITLE_HEIGHT = 44
+local TOP_BAR = 52
+local DEFAULT_YAW = math.pi -- the rig faces -Z, so the camera starts on the -Z side
 local SKIN_SWATCHES = {
 	"#ffe0c8",
 	"#f5cba7",
@@ -191,6 +193,7 @@ local function build(player: Player, remote: RemoteEvent)
 	-- State: the look being edited and the entry details.
 	local look = {
 		bundleId = nil :: number?,
+		outfitId = nil :: number?,
 		shirt = nil :: number?,
 		pants = nil :: number?,
 		skinColor = nil :: string?,
@@ -202,10 +205,15 @@ local function build(player: Player, remote: RemoteEvent)
 	local rarity = "common"
 	local zonesOn: { [string]: boolean } = {}
 	local weights: { [string]: string } = {}
+	local sliderShow: { [string]: (number?) -> () } = {}
+	local zoneUi: { [string]: { show: (boolean) -> (), weight: TextBox } } = {}
+	local catboyButtons: { [string]: TextButton } = {}
+	local loadCatboy: (string?) -> ()
 
 	local function lookTable(): { [string]: any }
 		local out: { [string]: any } = {
 			bundleId = look.bundleId,
+			outfitId = look.outfitId,
 			shirt = look.shirt,
 			pants = look.pants,
 			skinColor = look.skinColor,
@@ -222,49 +230,105 @@ local function build(player: Player, remote: RemoteEvent)
 		return out
 	end
 
+	local playerGui = player:WaitForChild("PlayerGui")
 	local gui = Instance.new("ScreenGui")
 	gui.Name = "CatboyMakerGui"
+	gui.IgnoreGuiInset = true
 	gui.ResetOnSpawn = false
 	gui.DisplayOrder = 10
 
-	local panel = Instance.new("Frame")
-	panel.Visible = false
-	panel.BackgroundColor3 = PANEL
-	panel.AnchorPoint = Vector2.new(1, 0)
-	panel.Position = UDim2.new(1, -8, 0, 8)
-	panel.Size = UDim2.new(0, 380, 1, -16)
-	corner(panel, 16)
-	local panelStroke = Instance.new("UIStroke")
-	panelStroke.Thickness = 3
-	panelStroke.Color = Color3.fromHex("#1e1e28")
-	panelStroke.Parent = panel
-	panel.Parent = gui
+	local root = Instance.new("Frame")
+	root.Visible = false
+	root.Active = true -- keeps clicks from reaching the world
+	root.BackgroundColor3 = Color3.fromRGB(27, 27, 38)
+	root.Size = UDim2.fromScale(1, 1)
+	root.Parent = gui
 
-	local title = label(panel, "Catboy maker", TITLE_HEIGHT)
+	-- Open or close the editor: hides the game HUD and freezes the character while it is open.
+	-- Freezes by zeroing the Humanoid's speed and jump (nothing else in the game sets them), then restores them.
+	local saved: { walk: number, jump: number }? = nil
+	local function setOpen(open: boolean)
+		root.Visible = open
+		local hud = playerGui:FindFirstChild("SeedTossHud")
+		if hud and hud:IsA("ScreenGui") then
+			hud.Enabled = not open
+		end
+		local humanoid = player.Character and player.Character:FindFirstChildWhichIsA("Humanoid")
+		if not humanoid then
+			return
+		end
+		if open and not saved then
+			saved = { walk = humanoid.WalkSpeed, jump = humanoid.JumpHeight }
+			humanoid.WalkSpeed = 0
+			humanoid.JumpHeight = 0
+		elseif not open and saved then
+			humanoid.WalkSpeed = saved.walk
+			humanoid.JumpHeight = saved.jump
+			saved = nil
+		end
+	end
+
+	-- Top bar: title, the catboy row (New catboy + one button per Config catboy) and the close button.
+	local topBar = Instance.new("Frame")
+	topBar.BackgroundColor3 = FIELD
+	topBar.BorderSizePixel = 0
+	topBar.Size = UDim2.new(1, 0, 0, TOP_BAR)
+	topBar.Parent = root
+	local title = label(topBar, "Catboy maker", TOP_BAR)
 	title.Position = UDim2.fromOffset(12, 0)
+	title.Size = UDim2.fromOffset(170, TOP_BAR)
 	title.Font = Enum.Font.GothamBlack
 	title.TextSize = 22
-	local close = button(panel, "X", 44, function()
-		panel.Visible = false
+	local close = button(topBar, "X", 44, function()
+		setOpen(false)
 	end)
-	close.AnchorPoint = Vector2.new(1, 0)
-	close.Position = UDim2.new(1, -4, 0, 0)
+	close.AnchorPoint = Vector2.new(1, 0.5)
+	close.Position = UDim2.new(1, -8, 0.5, 0)
 	close.Size = UDim2.fromOffset(44, 44)
 	close.BackgroundColor3 = Color3.fromRGB(220, 60, 60)
+	local catboyRow = Instance.new("ScrollingFrame")
+	catboyRow.BackgroundTransparency = 1
+	catboyRow.BorderSizePixel = 0
+	catboyRow.Position = UDim2.fromOffset(190, 0)
+	catboyRow.Size = UDim2.new(1, -250, 1, 0)
+	catboyRow.CanvasSize = UDim2.new()
+	catboyRow.AutomaticCanvasSize = Enum.AutomaticSize.X
+	catboyRow.ScrollingDirection = Enum.ScrollingDirection.X
+	catboyRow.ScrollBarThickness = 4
+	local catboyLayout = Instance.new("UIListLayout")
+	catboyLayout.FillDirection = Enum.FillDirection.Horizontal
+	catboyLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+	catboyLayout.SortOrder = Enum.SortOrder.LayoutOrder
+	catboyLayout.Padding = UDim.new(0, 6)
+	catboyLayout.Parent = catboyRow
+	catboyRow.Parent = topBar
 
-	local scroll = Instance.new("ScrollingFrame")
-	scroll.BackgroundTransparency = 1
-	scroll.BorderSizePixel = 0
-	scroll.Position = UDim2.fromOffset(8, TITLE_HEIGHT + 4)
-	scroll.Size = UDim2.new(1, -16, 1, -TITLE_HEIGHT - 12)
-	scroll.CanvasSize = UDim2.new()
-	scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-	scroll.ScrollBarThickness = 6
-	layout(scroll, false, 14)
-	scroll.Parent = panel
+	-- Left and right columns, each one scrolling list of sections.
+	local function column(right: boolean): ScrollingFrame
+		local frame = Instance.new("Frame")
+		frame.BackgroundColor3 = PANEL
+		frame.AnchorPoint = Vector2.new(if right then 1 else 0, 0)
+		frame.Position = UDim2.new(if right then 1 else 0, if right then -12 else 12, 0, TOP_BAR + 12)
+		frame.Size = UDim2.new(0, 360, 1, -TOP_BAR - 24)
+		corner(frame, 16)
+		frame.Parent = root
+		local list = Instance.new("ScrollingFrame")
+		list.BackgroundTransparency = 1
+		list.BorderSizePixel = 0
+		list.Position = UDim2.fromOffset(8, 8)
+		list.Size = UDim2.new(1, -16, 1, -16)
+		list.CanvasSize = UDim2.new()
+		list.AutomaticCanvasSize = Enum.AutomaticSize.Y
+		list.ScrollBarThickness = 6
+		layout(list, false, 14)
+		list.Parent = frame
+		return list
+	end
+	local leftColumn = column(false)
+	local rightColumn = column(true)
 
 	local order = 0
-	local function section(heading: string): Frame
+	local function section(parent: ScrollingFrame, heading: string): Frame
 		order += 1
 		local s = Instance.new("Frame")
 		s.BackgroundTransparency = 1
@@ -273,27 +337,112 @@ local function build(player: Player, remote: RemoteEvent)
 		s.LayoutOrder = order
 		layout(s, false, 6)
 		label(s, heading, 20, nil, true).TextSize = 16
-		s.Parent = scroll
+		s.Parent = parent
 		return s
 	end
 
-	local status: TextLabel
+	-- Center: the 3D preview on a gradient stage.
+	local stage = Instance.new("Frame")
+	stage.BackgroundColor3 = Color3.new(1, 1, 1)
+	stage.Position = UDim2.fromOffset(384, TOP_BAR + 12)
+	stage.Size = UDim2.new(1, -768, 1, -TOP_BAR - 24)
+	corner(stage, 16)
+	local stageGradient = Instance.new("UIGradient")
+	stageGradient.Rotation = 90
+	stageGradient.Color = ColorSequence.new(Color3.fromHex("#3a3a55"), Color3.fromHex("#1e1e2c"))
+	stageGradient.Parent = stage
+	stage.Parent = root
+	local viewport = Instance.new("ViewportFrame")
+	viewport.BackgroundTransparency = 1
+	viewport.Size = UDim2.fromScale(1, 1)
+	viewport.Ambient = Color3.fromRGB(200, 200, 210)
+	viewport.LightColor = Color3.new(1, 1, 1)
+	viewport.LightDirection = Vector3.new(-1, -1, -1)
+	viewport.Parent = stage
+	local camera = Instance.new("Camera")
+	camera.FieldOfView = 30
+	camera.Parent = viewport
+	viewport.CurrentCamera = camera
+
+	local status = label(stage, "", 24, GREY)
+	status.AnchorPoint = Vector2.new(0.5, 0)
+	status.Position = UDim2.new(0.5, 0, 0, 12)
+	status.TextXAlignment = Enum.TextXAlignment.Center
 	local function setStatus(value: string, isError: boolean?)
 		status.Text = value
 		status.TextColor3 = if isError then RED else GREY
 	end
+	local hint = label(stage, "Drag to spin, scroll to zoom", 20, GREY)
+	hint.AnchorPoint = Vector2.new(0.5, 1)
+	hint.Position = UDim2.new(0.5, 0, 1, -12)
+	hint.TextXAlignment = Enum.TextXAlignment.Center
+
+	-- Orbit camera. yaw and zoom survive rebuilds so editing does not reset the view.
+	local previewModel: Model?
+	local center = Vector3.zero
+	local baseDistance = 10
+	local yaw = DEFAULT_YAW
+	local zoom = 1
+	local function placeCamera()
+		local offset = Vector3.new(math.sin(yaw), 0.15, math.cos(yaw)).Unit
+		camera.CFrame = CFrame.lookAt(center + offset * baseDistance * zoom, center)
+	end
+	local resetView = button(stage, "Reset view", 110, function()
+		yaw = DEFAULT_YAW
+		zoom = 1
+		placeCamera()
+	end)
+	resetView.AnchorPoint = Vector2.new(1, 1)
+	resetView.Position = UDim2.new(1, -12, 1, -12)
+	-- Spin from the change in mouse position, not input.Delta (Delta is 0 for some mouse input).
+	local spinning = false
+	local lastX = 0
+	viewport.InputBegan:Connect(function(input)
+		if isPress(input) then
+			spinning = true
+			lastX = input.Position.X
+		end
+	end)
+	viewport.InputChanged:Connect(function(input: InputObject)
+		if input.UserInputType == Enum.UserInputType.MouseWheel then
+			zoom = math.clamp(zoom - input.Position.Z * 0.1, 0.5, 2)
+			placeCamera()
+		end
+	end)
+	UserInputService.InputChanged:Connect(function(input: InputObject)
+		if
+			spinning
+			and (
+				input.UserInputType == Enum.UserInputType.MouseMovement
+				or input.UserInputType == Enum.UserInputType.Touch
+			)
+		then
+			yaw -= (input.Position.X - lastX) * 0.01
+			lastX = input.Position.X
+			placeCamera()
+		end
+	end)
+	UserInputService.InputEnded:Connect(function(input)
+		if isPress(input) then
+			spinning = false
+		end
+	end)
 
 	-- Any look change redraws the chips and, after a short pause, asks the server to rebuild the rig.
 	local renderChips: () -> ()
 	local token = 0
 	local function changed()
 		renderChips()
-		if not look.bundleId then
+		token += 1
+		if not (look.bundleId or look.outfitId) then
+			if previewModel then
+				previewModel:Destroy()
+				previewModel = nil
+			end
 			setStatus("Pick a bundle to start")
 			return
 		end
 		setStatus("Building...")
-		token += 1
 		local mine = token
 		task.delay(0.3, function()
 			if mine == token then
@@ -303,7 +452,7 @@ local function build(player: Player, remote: RemoteEvent)
 	end
 
 	-- 1. Search
-	local search = section("Search")
+	local search = section(leftColumn, "Search")
 	local keyword = textbox(search, "Search the catalog", 340)
 	local categoryRow = row(search)
 	local category = 1
@@ -342,6 +491,7 @@ local function build(player: Player, remote: RemoteEvent)
 	local function pick(kind: string, id: number)
 		if kind == "bundle" then
 			look.bundleId = id
+			look.outfitId = nil
 		elseif kind == "shirt" then
 			look.shirt = id
 		elseif kind == "pants" then
@@ -425,8 +575,7 @@ local function build(player: Player, remote: RemoteEvent)
 	moreButton.LayoutOrder = 101
 
 	-- 2. On the rig
-	local rig = section("On the rig")
-	status = label(rig, "Pick a bundle to start", 20, GREY)
+	local rig = section(rightColumn, "On the rig")
 	local chips = row(rig)
 	label(rig, "Removed", 18, GREY, true)
 	local removed = row(rig)
@@ -437,6 +586,12 @@ local function build(player: Player, remote: RemoteEvent)
 		if look.bundleId then
 			chip(chips, thumb("BundleThumbnail", look.bundleId), "bundle " .. look.bundleId, "x", function()
 				look.bundleId = nil
+				changed()
+			end)
+		end
+		if look.outfitId then
+			chip(chips, "", "outfit " .. look.outfitId, "x", function()
+				look.outfitId = nil
 				changed()
 			end)
 		end
@@ -471,18 +626,41 @@ local function build(player: Player, remote: RemoteEvent)
 		end
 	end
 
-	remote.OnClientEvent:Connect(function(ok: boolean, data: any)
-		if ok then
-			rigIds = data
-			renderChips()
-			setStatus("Ready")
-		else
+	remote.OnClientEvent:Connect(function(ok: boolean, data: any, buildNumber: number?)
+		if not ok then
 			setStatus(tostring(data), true)
+			return
 		end
+		rigIds = data
+		renderChips()
+		-- The rig replicates from the server; wait for this build's copy (a newer build may replace it).
+		local source: Model?
+		for _ = 1, 50 do
+			local found = ReplicatedStorage:FindFirstChild("CatboyMakerRig")
+			if found and found:IsA("Model") and found:GetAttribute("Build") == buildNumber then
+				source = found
+				break
+			end
+			task.wait(0.1)
+		end
+		if not source then
+			return
+		end
+		if previewModel then
+			previewModel:Destroy()
+		end
+		local model = source:Clone()
+		model.Parent = viewport
+		previewModel = model
+		local cf, size = model:GetBoundingBox()
+		center = cf.Position
+		baseDistance = size.Y / 2 / math.tan(math.rad(15)) * 1.4 -- room for the status and hint text
+		placeCamera()
+		setStatus("Ready")
 	end)
 
 	-- 3. Skin
-	local skin = section("Skin")
+	local skin = section(rightColumn, "Skin")
 	local swatches = row(skin)
 	for _, hex in SKIN_SWATCHES do
 		local s = button(swatches, "", 28, function()
@@ -504,7 +682,7 @@ local function build(player: Player, remote: RemoteEvent)
 	end)
 
 	-- 4. Scale
-	local scaleSection = section("Scale")
+	local scaleSection = section(rightColumn, "Scale")
 	for _, def in SLIDERS do
 		local field, name, lo, hi = def[1] :: string, def[2] :: string, def[3] :: number, def[4] :: number
 		local line = Instance.new("Frame")
@@ -533,6 +711,7 @@ local function build(player: Player, remote: RemoteEvent)
 			knob.BackgroundColor3 = if value then ON else BUTTON
 			readout.Text = if value then string.format("%.2f", value) else "default"
 		end
+		sliderShow[field] = show
 		show(nil)
 		local dragging = false
 		local function drag(x: number)
@@ -570,7 +749,7 @@ local function build(player: Player, remote: RemoteEvent)
 	end
 
 	-- 5. Details
-	local details = section("Details")
+	local details = section(rightColumn, "Details")
 	local idBox = textbox(details, "lowercase, e.g. mochi", 340)
 	local idNote = label(details, "", 18, GREY)
 	idBox:GetPropertyChangedSignal("Text"):Connect(function()
@@ -617,20 +796,24 @@ local function build(player: Player, remote: RemoteEvent)
 	for _, zone in Config.Zones do
 		local line = row(details)
 		local box: TextButton
+		local function showZone(on: boolean)
+			zonesOn[zone.id] = on
+			box.Text = if on then "✓" else ""
+			setOn(box, on)
+		end
 		box = button(line, "", 28, function()
-			zonesOn[zone.id] = not zonesOn[zone.id]
-			box.Text = if zonesOn[zone.id] then "✓" else ""
-			setOn(box, zonesOn[zone.id])
+			showZone(not zonesOn[zone.id])
 		end)
 		local zoneName = label(line, Config.ZoneLooks[zone.id].name, 28)
 		zoneName.Size = UDim2.fromOffset(120, 28)
-		textbox(line, "weight", 80, function(value)
+		local weightBox = textbox(line, "weight", 80, function(value)
 			weights[zone.id] = value
 		end)
+		zoneUi[zone.id] = { show = showZone, weight = weightBox }
 	end
 
 	-- 6. Config entry
-	local entrySection = section("Config entry")
+	local entrySection = section(rightColumn, "Config entry")
 	local output = Instance.new("TextBox")
 	output.Size = UDim2.new(1, 0, 0, 180)
 	output.BackgroundColor3 = FIELD
@@ -678,11 +861,70 @@ local function build(player: Player, remote: RemoteEvent)
 	make.LayoutOrder = 0
 	output.Parent = entrySection
 
+	-- Load a Config catboy into the editor (nil = a blank new one). Copies tables, never aliases Config.
+	function loadCatboy(id: string?)
+		local def = if id then Config.Creatures[id] else nil
+		if def and def.look.manual then
+			setStatus(def.name .. " uses a manual look. Edit it in Config by hand.", true)
+			return
+		end
+		local src: any = if def then def.look else {}
+		look.bundleId = src.bundleId
+		look.outfitId = src.outfitId
+		look.shirt = src.shirt
+		look.pants = src.pants
+		look.skinColor = src.skinColor
+		look.accessoryIds = if src.accessoryIds then table.clone(src.accessoryIds) else {}
+		look.removeAccessoryIds = if src.removeAccessoryIds then table.clone(src.removeAccessoryIds) else {}
+		look.scale = if src.scale then table.clone(src.scale) else {}
+		rigIds = {}
+		for field, show in sliderShow do
+			show(look.scale[field])
+		end
+		idBox.Text = id or ""
+		nameBox.Text = if def then def.name else ""
+		rarity = if def then def.rarity else "common"
+		showRarity()
+		incomeBox.Text = if def then tostring(def.income) else ""
+		colorBox.Text = if def then def.color else ""
+		if not def then
+			colorPreview.BackgroundColor3 = BUTTON
+		end
+		for _, zone in Config.Zones do
+			local weight = if def then def.zones[zone.id] else nil
+			zoneUi[zone.id].show(weight ~= nil)
+			zoneUi[zone.id].weight.Text = if weight then tostring(weight) else ""
+			weights[zone.id] = zoneUi[zone.id].weight.Text
+		end
+		for key, b in catboyButtons do
+			setOn(b, key == (id or ""))
+		end
+		problems.Text = ""
+		output.Visible = false
+		changed()
+	end
+
+	catboyButtons[""] = button(catboyRow, "New catboy", 110, function()
+		loadCatboy(nil)
+	end)
+	local catboyIds = {}
+	for id in Config.Creatures do
+		table.insert(catboyIds, id)
+	end
+	table.sort(catboyIds, function(a, b)
+		return Config.Creatures[a].name < Config.Creatures[b].name
+	end)
+	for _, id in catboyIds do
+		catboyButtons[id] = button(catboyRow, Config.Creatures[id].name, 90, function()
+			loadCatboy(id)
+		end)
+	end
+
 	renderChips()
-	gui.Parent = player:WaitForChild("PlayerGui")
+	gui.Parent = playerGui
 	UserInputService.InputBegan:Connect(function(input, processed)
 		if not processed and input.KeyCode == Enum.KeyCode.M then
-			panel.Visible = not panel.Visible
+			setOpen(not root.Visible)
 		end
 	end)
 	print("Catboy maker: press M")

@@ -1,5 +1,6 @@
 --!strict
 local Assert = require("./assert")
+local Config = require("../src/shared/Config")
 local CreatureEntry = require("../src/shared/CreatureEntry")
 local luau = (require :: any)("@lune/luau") -- cast: luau-lsp cannot resolve Lune built-ins outside run.luau
 
@@ -57,6 +58,18 @@ return {
 		local def = full()
 		def.name = 'Mo"chi' .. string.char(92)
 		Assert.eq(roundTrip(def).name, def.name)
+	end,
+
+	["every Config creature round-trips through format"] = function()
+		local ids = {}
+		for _, zone in Config.Zones do
+			table.insert(ids, zone.id)
+		end
+		for id, def in Config.Creatures do
+			local loaded = luau.load("return {" .. CreatureEntry.format(id, def :: any) .. "}")() :: any
+			Assert.truthy(deepEq(loaded[id], def), id)
+			Assert.eq(#CreatureEntry.validate(id, def :: any, ids), 0)
+		end
 	end,
 
 	["format is deterministic"] = function()
