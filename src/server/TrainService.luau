@@ -6,13 +6,14 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Config = require(ReplicatedStorage.Shared.Config)
 local PlayerState = require(script.Parent.PlayerState)
 local RateLimit = require(script.Parent.RateLimit)
+local Remotes = require(script.Parent.Remotes)
 
 local TrainService = {}
 
 local limiter = RateLimit.new(Config.Train.maxPerSecond, Config.Train.maxPerSecond)
 
-function TrainService.init(trainRemote: RemoteEvent)
-	trainRemote.OnServerEvent:Connect(function(player: Player)
+function TrainService.init()
+	Remotes.train.OnServerEvent:Connect(function(player: Player)
 		local state = PlayerState.get(player)
 		if not state or not limiter:allow(player) then
 			return

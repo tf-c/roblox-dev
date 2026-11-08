@@ -53,11 +53,8 @@ function PlayerState.get(player: Player): State?
 	return states[player]
 end
 
+-- The pending critter is cleaned up by ThrowService.forget first.
 function PlayerState.remove(player: Player)
-	local state = states[player]
-	if state and state.pending and state.pending.model then
-		state.pending.model:Destroy()
-	end
 	states[player] = nil
 end
 

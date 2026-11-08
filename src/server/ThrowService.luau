@@ -3,6 +3,9 @@
 -- Server: distance from Power + timing, zone from distance, free weighted roll,
 -- then a critter sprouts where the seed lands.
 --
+-- A thrown critter is "pending" until it leaves by exactly one path: collected,
+-- wandered off (timeout) or owner left. All three go through takePending.
+--
 -- Known prototype gap: a modified client can always send a perfect timing.
 -- Harden later (e.g. server-timed meter) before anything of value rides on it.
 
@@ -18,6 +21,7 @@ local CritterVisual = require(script.Parent.CritterVisual)
 local MapBuilder = require(script.Parent.MapBuilder)
 local PlayerState = require(script.Parent.PlayerState)
 local PlotService = require(script.Parent.PlotService)
+local Remotes = require(script.Parent.Remotes)
 
 local ThrowService = {}
 
@@ -27,42 +31,40 @@ local function nextNumber(): number
 end
 
 local nextToken = 0
-local notifyRemote: RemoteEvent? = nil
-local fieldFolder: Folder? = nil
+local fieldFolder = Instance.new("Folder")
+fieldFolder.Name = "FieldCritters"
 
-local function notify(player: Player, text: string)
-	if notifyRemote then
-		notifyRemote:FireClient(player, text)
-	end
+-- The player's pending critter, if it is still the throw identified by `token`.
+local function current(player: Player, token: number): PlayerState.Pending?
+	local state = PlayerState.get(player)
+	local pending = if state then state.pending else nil
+	return if pending and pending.token == token then pending else nil
 end
 
-local function clearPending(player: Player, token: number): boolean
-	local state = PlayerState.get(player)
-	if not state or not state.pending or state.pending.token ~= token then
-		return false
+-- Removes the pending critter (model included) if it is still `token`. Returns it, or nil if it already left.
+local function takePending(player: Player, token: number): PlayerState.Pending?
+	local pending = current(player, token)
+	if not pending then
+		return nil
 	end
-	local model = state.pending.model
-	state.pending = nil
-	if model then
-		model:Destroy()
+	(PlayerState.get(player) :: PlayerState.State).pending = nil
+	if pending.model then
+		pending.model:Destroy()
 	end
 	PlayerState.sync(player)
-	return true
+	return pending
 end
 
 local function collect(player: Player, token: number)
-	local state = PlayerState.get(player)
-	if not state or not state.pending or state.pending.token ~= token then
-		return
+	local pending = takePending(player, token)
+	if pending then
+		PlotService.place(player, pending.creatureId)
 	end
-	local creatureId = state.pending.creatureId
-	clearPending(player, token)
-	PlotService.place(player, creatureId)
 end
 
 local function sprout(player: Player, token: number, creatureId: string, landPos: Vector3)
-	local state = PlayerState.get(player)
-	if not state or not state.pending or state.pending.token ~= token then
+	local pending = current(player, token)
+	if not pending then
 		return
 	end
 
@@ -71,7 +73,7 @@ local function sprout(player: Player, token: number, creatureId: string, landPos
 	part.Position = Vector3.new(landPos.X, restY - part.Size.Y, landPos.Z) -- start underground
 	part:SetAttribute("OwnerUserId", player.UserId)
 	part.Parent = fieldFolder
-	state.pending.model = part
+	pending.model = part
 	TweenService:Create(
 		part,
 		TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
@@ -94,7 +96,7 @@ local function sprout(player: Player, token: number, creatureId: string, landPos
 	else
 		task.delay(Config.AutoCollectDelaySeconds, function()
 			local target = PlotService.plotCenter(player)
-			if target and part.Parent then
+			if target and current(player, token) then
 				local tween = TweenService:Create(
 					part,
 					TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
@@ -109,19 +111,19 @@ local function sprout(player: Player, token: number, creatureId: string, landPos
 
 	-- Never let an ignored critter block throwing forever.
 	task.delay(Config.PendingTimeoutSeconds, function()
-		if clearPending(player, token) then
-			notify(player, Config.Creatures[creatureId].name .. " wandered off")
+		if takePending(player, token) then
+			Remotes.toast(player, Config.Creatures[creatureId].name .. " wandered off")
 		end
 	end)
 end
 
-local function onThrow(throwResult: RemoteEvent, player: Player, timing: any)
+local function onThrow(player: Player, timing: any)
 	local state = PlayerState.get(player)
 	if not state then
 		return
 	end
 	if state.pending then
-		notify(player, "Collect your critter first")
+		Remotes.toast(player, "Collect your critter first")
 		return
 	end
 	local now = os.clock()
@@ -131,8 +133,7 @@ local function onThrow(throwResult: RemoteEvent, player: Player, timing: any)
 	state.lastThrow = now
 
 	-- Distance.compute sanitizes timing (non-numbers and NaN become 0, then clamps).
-	local distance = Distance.compute(state.power, timing, Config.Distance)
-	local mult = Distance.meterMultiplier(timing, Config.Meter)
+	local distance, mult = Distance.compute(state.power, timing, Config.Distance)
 	local zoneId = Zone.forDistance(distance, Config.Zones)
 	local creatureId = WeightedRoll.pick(Config.ZoneTables[zoneId], nextNumber)
 	local sideways = rng:NextNumber(-1, 1) * Config.Map.laneWidth * 0.3
@@ -143,7 +144,7 @@ local function onThrow(throwResult: RemoteEvent, player: Player, timing: any)
 	state.pending = { token = token, creatureId = creatureId, model = nil }
 	PlayerState.sync(player)
 
-	throwResult:FireClient(player, {
+	Remotes.throwResult:FireClient(player, {
 		distance = distance,
 		mult = mult,
 		zoneId = zoneId,
@@ -155,16 +156,17 @@ local function onThrow(throwResult: RemoteEvent, player: Player, timing: any)
 	task.delay(Config.Throw.arcSeconds, sprout, player, token, creatureId, landPos)
 end
 
-function ThrowService.init(throwRemote: RemoteEvent, throwResult: RemoteEvent, notify_: RemoteEvent)
-	notifyRemote = notify_
-	local folder = Instance.new("Folder")
-	folder.Name = "FieldCritters"
-	folder.Parent = Workspace
-	fieldFolder = folder
+function ThrowService.init()
+	fieldFolder.Parent = Workspace
+	Remotes.throw.OnServerEvent:Connect(onThrow)
+end
 
-	throwRemote.OnServerEvent:Connect(function(player: Player, timing: any)
-		onThrow(throwResult, player, timing)
-	end)
+-- Owner left: drop their pending critter. Call before PlayerState.remove.
+function ThrowService.forget(player: Player)
+	local state = PlayerState.get(player)
+	if state and state.pending then
+		takePending(player, state.pending.token)
+	end
 end
 
 return ThrowService

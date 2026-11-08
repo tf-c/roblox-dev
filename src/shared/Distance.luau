@@ -41,9 +41,11 @@ function Distance.meterMultiplier(timing: number, meter: MeterConfig): number
 	end
 end
 
-function Distance.compute(power: number, timing: number, cfg: DistanceConfig): number
+-- Returns the distance and the meter multiplier that produced it.
+function Distance.compute(power: number, timing: number, cfg: DistanceConfig): (number, number)
 	local p = math.max(sanitize(power, 0), 0)
-	return (cfg.baseDistance + cfg.powerScale * math.sqrt(p)) * Distance.meterMultiplier(timing, cfg.meter)
+	local mult = Distance.meterMultiplier(timing, cfg.meter)
+	return (cfg.baseDistance + cfg.powerScale * math.sqrt(p)) * mult, mult
 end
 
 return Distance

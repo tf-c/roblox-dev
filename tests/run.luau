@@ -12,6 +12,7 @@ local specs: { { name: string, cases: Spec } } = {
 	{ name = "Zone", cases = require("./Zone.spec") :: any },
 	{ name = "WeightedRoll", cases = require("./WeightedRoll.spec") :: any },
 	{ name = "Income", cases = require("./Income.spec") :: any },
+	{ name = "Plot", cases = require("./Plot.spec") :: any },
 	{ name = "Config", cases = require("./Config.spec") :: any },
 }
 

@@ -2,6 +2,7 @@
 -- Sanity checks on the balance tables so a typo fails here, not mid-playtest.
 local Assert = require("./assert")
 local Config = require("../src/shared/Config")
+local Distance = require("../src/shared/Distance")
 
 local RARITIES = { common = true, rare = true, epic = true }
 
@@ -47,8 +48,7 @@ return {
 	["the far zone is reachable with a perfect throw after training"] = function()
 		-- Guards against tuning that makes Wildwood impossible.
 		local lastZone = Config.Zones[#Config.Zones]
-		local d = Config.Distance
-		local reach = (d.baseDistance + d.powerScale * math.sqrt(1000)) * Config.Meter.perfectMult
+		local reach = Distance.compute(1000, Config.Meter.sweetCenter, Config.Distance)
 		Assert.truthy(reach >= lastZone.minDistance, "wildwood unreachable at 1000 power")
 	end,
 }

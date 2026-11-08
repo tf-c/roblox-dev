@@ -21,6 +21,13 @@ return {
 		Assert.eq(Distance.compute(0, 0.58, cfg), perfect)
 	end,
 
+	["also returns the meter multiplier it used"] = function()
+		local _, mult = Distance.compute(100, 0.21, cfg)
+		Assert.near(mult, 1.0, 1e-9)
+		local _, perfect = Distance.compute(100, 0.5, cfg)
+		Assert.eq(perfect, 1.5)
+	end,
+
 	["edges give the edge multiplier"] = function()
 		Assert.eq(Distance.compute(0, 0, cfg), 20 * 0.5)
 		Assert.eq(Distance.compute(0, 1, cfg), 20 * 0.5)

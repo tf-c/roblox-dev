@@ -1,8 +1,8 @@
 --!strict
--- Server entry: builds the map, creates remotes, wires services and player lifecycle.
+-- Server entry: builds the map, wires services and player lifecycle.
+-- Remotes are created when Remotes.luau is first required (by the services below).
 
 local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local MapBuilder = require(script.Parent.MapBuilder)
 local PlayerState = require(script.Parent.PlayerState)
@@ -10,27 +10,10 @@ local PlotService = require(script.Parent.PlotService)
 local ThrowService = require(script.Parent.ThrowService)
 local TrainService = require(script.Parent.TrainService)
 
-local remotes = Instance.new("Folder")
-remotes.Name = "Remotes"
-
-local function remote(name: string): RemoteEvent
-	local r = Instance.new("RemoteEvent")
-	r.Name = name
-	r.Parent = remotes
-	return r
-end
-
-local trainRemote = remote("Train") -- client -> server
-local throwRemote = remote("Throw") -- client -> server (timing 0..1)
-local throwResult = remote("ThrowResult") -- server -> client (arc + reveal data)
-local buyUpgrade = remote("BuyUpgrade") -- client -> server
-local notifyRemote = remote("Notify") -- server -> client (toast text)
-remotes.Parent = ReplicatedStorage
-
 MapBuilder.build()
-TrainService.init(trainRemote)
-PlotService.init(buyUpgrade, notifyRemote)
-ThrowService.init(throwRemote, throwResult, notifyRemote)
+TrainService.init()
+PlotService.init()
+ThrowService.init()
 
 local function onPlayerAdded(player: Player)
 	PlayerState.add(player)
@@ -43,6 +26,7 @@ for _, player in Players:GetPlayers() do
 end
 
 Players.PlayerRemoving:Connect(function(player: Player)
+	ThrowService.forget(player) -- before PlayerState.remove: it reads the pending critter
 	PlotService.remove(player)
 	PlayerState.remove(player)
 	TrainService.forget(player)

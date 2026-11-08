@@ -6,9 +6,11 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Income = require(ReplicatedStorage.Shared.Income)
+local Plot = require(ReplicatedStorage.Shared.Plot)
 local CritterVisual = require(script.Parent.CritterVisual)
 local MapBuilder = require(script.Parent.MapBuilder)
 local PlayerState = require(script.Parent.PlayerState)
+local Remotes = require(script.Parent.Remotes)
 
 type PlotVisual = {
 	index: number,
@@ -20,13 +22,7 @@ type PlotVisual = {
 local PlotService = {}
 
 local plots: { [Player]: PlotVisual } = {}
-local notifyRemote: RemoteEvent? = nil
-
-local function notify(player: Player, text: string)
-	if notifyRemote then
-		notifyRemote:FireClient(player, text)
-	end
-end
+local notify = Remotes.toast
 
 local function freeIndex(): number
 	local used: { [number]: boolean } = {}
@@ -75,33 +71,20 @@ function PlotService.place(player: Player, creatureId: string)
 		return
 	end
 
-	for slot = 1, Config.Plot.slots do
-		if state.plot[slot] == nil then
-			state.plot[slot] = creatureId
-			showCritter(plot, slot, creatureId)
-			PlayerState.sync(player)
-			return
-		end
-	end
-
-	local newIncome = Config.Creatures[creatureId].income
-	local worstSlot, worstIncome = 1, math.huge
-	for slot = 1, Config.Plot.slots do
-		local income = Config.Creatures[state.plot[slot]].income
-		if income < worstIncome then
-			worstSlot, worstIncome = slot, income
-		end
-	end
-	if newIncome > worstIncome then
-		local oldName = Config.Creatures[state.plot[worstSlot]].name
-		state.plot[worstSlot] = creatureId
-		showCritter(plot, worstSlot, creatureId)
-		PlayerState.sync(player)
-		notify(player, string.format("Plot full: %s replaced %s", Config.Creatures[creatureId].name, oldName))
+	local name = Config.Creatures[creatureId].name
+	local slot = Plot.choose(state.plot, creatureId, Config.CreatureIncome, Config.Plot.slots)
+	if slot == nil then
+		notify(player, string.format("Plot full: %s was released", name))
 		return
 	end
 
-	notify(player, string.format("Plot full: %s was released", Config.Creatures[creatureId].name))
+	local replaced = state.plot[slot]
+	state.plot[slot] = creatureId
+	showCritter(plot, slot, creatureId)
+	PlayerState.sync(player)
+	if replaced then
+		notify(player, string.format("Plot full: %s replaced %s", name, Config.Creatures[replaced].name))
+	end
 end
 
 -- Where a critter flies to in auto-collect mode.
@@ -110,10 +93,8 @@ function PlotService.plotCenter(player: Player): Vector3?
 	return if plot then plot.model:GetPivot().Position else nil
 end
 
-function PlotService.init(buyUpgradeRemote: RemoteEvent, notify_: RemoteEvent)
-	notifyRemote = notify_
-
-	buyUpgradeRemote.OnServerEvent:Connect(function(player: Player)
+function PlotService.init()
+	Remotes.buyUpgrade.OnServerEvent:Connect(function(player: Player)
 		local state = PlayerState.get(player)
 		if not state or state.upgraded then
 			return
