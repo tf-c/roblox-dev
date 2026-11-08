@@ -31,3 +31,15 @@ require(game.ServerScriptService.Server.CreatureRigs).saveModel("pillow")
 ```
 
 It saves the rig to `ServerStorage.CreatureModels.pillow`. A saved model overrides the Config look until you delete it from that folder, and the place needs saving (Ctrl+S) to keep it.
+
+### The maker panel
+
+In a Studio play test, the place owner can press M to open the catboy maker (it never exists in a live game or for other players). It has six sections:
+
+- Search: find Roblox-made bundles, accessories, shirts and pants in the catalog; click a result to put it on the rig.
+- On the rig: what the rig wears now. Remove an item with its x, and restore removed ones from the Removed row.
+- Skin and Scale: skin color swatches (or a hex code) and sliders for height, width, head, proportion and body type.
+- Details: id, name, rarity, income, ears and hair color, and the zones with weights.
+- Config entry: "Make entry" checks the details and prints a ready-to-paste entry in the panel and the Output window.
+
+A rig appears 8 studs in front of you and updates as you edit. The panel never writes files: paste the entry into `Config.Creatures` by hand. Besides `bundleId`, a look can take `shirt` and `pants` (classic clothing catalog ids) on top of any source.

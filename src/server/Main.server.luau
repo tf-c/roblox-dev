@@ -4,6 +4,7 @@
 
 local Players = game:GetService("Players")
 
+local CatboyMaker = require(script.Parent.CatboyMaker)
 local CreatureRigs = require(script.Parent.CreatureRigs)
 local MapBuilder = require(script.Parent.MapBuilder)
 local PlayerState = require(script.Parent.PlayerState)
@@ -13,6 +14,7 @@ local TrainService = require(script.Parent.TrainService)
 
 MapBuilder.build()
 CreatureRigs.preload()
+CatboyMaker.init()
 TrainService.init()
 PlotService.init()
 ThrowService.init()
@@ -20,6 +22,7 @@ ThrowService.init()
 local function onPlayerAdded(player: Player)
 	PlayerState.add(player)
 	PlotService.add(player)
+	CatboyMaker.add(player)
 end
 
 Players.PlayerAdded:Connect(onPlayerAdded)
@@ -32,4 +35,5 @@ Players.PlayerRemoving:Connect(function(player: Player)
 	PlotService.remove(player)
 	PlayerState.remove(player)
 	TrainService.forget(player)
+	CatboyMaker.forget(player)
 end)

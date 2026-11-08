@@ -7,6 +7,7 @@ local UserInputService = game:GetService("UserInputService")
 
 local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"))
 local Upgrade = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Upgrade"))
+local CatboyMaker = require(script.Parent.CatboyMaker)
 local CatboysWindow = require(script.Parent.CatboysWindow)
 local Hud = require(script.Parent.Hud)
 local MeterController = require(script.Parent.MeterController)
@@ -78,3 +79,5 @@ for id, entry in hud.upgrades do
 	end)
 end
 refresh()
+
+CatboyMaker.init()
