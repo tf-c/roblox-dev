@@ -5,8 +5,28 @@
 - Skip planning for small tasks (typos, renames, minor design tweaks). Just do them.
 - When asked, use the `improve` skill to audit the codebase and write plans detailed enough for a cheaper, faster model (e.g. Sonnet) to implement.
 
+## Development Pipeline
+We are not building the game in one pass. Build from the ground up:
+1. Core mechanics first: get the main loop working and fun.
+2. Then layer on UI, music/audio, maps, economy, and the rest.
+
+Don't start a later layer until the core it depends on works. If a request jumps ahead (for example, shop UI before the loop exists), point that out before building.
+
 ## Skills
-Use these when relevant, or when I name them:
+Roblox skills in `.claude/skills/` (from AshExplained/roblox-skills):
+- `roblox-world-level-design`: maps, zones, player flow.
+- `roblox-game-ux`: design and approve a UI brief before building it.
+- `roblox-ui-implementation`: build approved UI in Studio.
+- `roblox-mobile-playtest`: phone/tablet checks.
+- `roblox-asset-pipeline`: finding, generating, and importing assets.
+- `roblox-economy-balancing`: currencies, sinks, reward curves.
+- `roblox-admin-tools-observability`: admin commands, audit logs, diagnostics.
+- `roblox-code-maintenance-refactor`: cleanup of Roblox Luau code. For Roblox code, this one leads. Use `improve-codebase-architecture` / `thermonuclear-code-quality-review` only when I name them, and never mix behavior changes with cleanup.
+- `handoff`: writes a handoff note to `.scratch/handoffs/` so a fresh session can continue.
+
+These skills sometimes point to other roblox-skills that aren't installed here. If one is needed, tell me rather than improvising it.
+
+Other skills. Use these when relevant, or when I name them:
 - `grill-with-docs`: question me to refine requirements before building.
 - `improve-codebase-architecture`: structural improvements.
 - `thermonuclear-code-quality-review`: simplify generated code and remove slop. Pair it with improve-codebase-architecture.
