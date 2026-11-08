@@ -10,7 +10,6 @@
 -- Harden later (e.g. server-timed meter) before anything of value rides on it.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 
 local Config = require(ReplicatedStorage.Shared.Config)
@@ -68,17 +67,14 @@ local function sprout(player: Player, token: number, creatureId: string, landPos
 		return
 	end
 
-	local part = CritterVisual.make(creatureId)
-	local restY = landPos.Y + part.Size.Y / 2
-	part.Position = Vector3.new(landPos.X, restY - part.Size.Y, landPos.Z) -- start underground
-	part:SetAttribute("OwnerUserId", player.UserId)
-	part.Parent = fieldFolder
-	pending.model = part
-	TweenService:Create(
-		part,
-		TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-		{ Position = Vector3.new(landPos.X, restY, landPos.Z) }
-	):Play()
+	local model = CritterVisual.make(creatureId)
+	local rest = CritterVisual.restingPivot(model, landPos)
+	local _, size = model:GetBoundingBox()
+	model:PivotTo(rest - Vector3.new(0, size.Y, 0)) -- start underground
+	model:SetAttribute("OwnerUserId", player.UserId)
+	model.Parent = fieldFolder
+	pending.model = model
+	CritterVisual.tweenTo(model, rest, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out))
 
 	if Config.CollectMode == "walk" then
 		local prompt = Instance.new("ProximityPrompt")
@@ -87,7 +83,7 @@ local function sprout(player: Player, token: number, creatureId: string, landPos
 		prompt.HoldDuration = 0
 		prompt.MaxActivationDistance = 12
 		prompt.RequiresLineOfSight = false
-		prompt.Parent = part
+		prompt.Parent = model.PrimaryPart
 		prompt.Triggered:Connect(function(who: Player)
 			if who == player then
 				collect(player, token)
@@ -97,12 +93,11 @@ local function sprout(player: Player, token: number, creatureId: string, landPos
 		task.delay(Config.AutoCollectDelaySeconds, function()
 			local target = PlotService.plotCenter(player)
 			if target and current(player, token) then
-				local tween = TweenService:Create(
-					part,
-					TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
-					{ Position = target + Vector3.new(0, 4, 0) }
+				local tween = CritterVisual.tweenTo(
+					model,
+					CFrame.new(target + Vector3.new(0, 4, 0)),
+					TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
 				)
-				tween:Play()
 				tween.Completed:Wait()
 			end
 			collect(player, token)

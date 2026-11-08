@@ -11,7 +11,7 @@ local Upgrade = require(ReplicatedStorage.Shared.Upgrade)
 export type Pending = {
 	token: number,
 	creatureId: string,
-	model: BasePart?,
+	model: Model?,
 }
 
 export type State = {

@@ -10,7 +10,7 @@ Context: the theme is pivoting from "toss seeds, critters sprout" to "throw a to
 |------|-------|----------|--------|------------|--------|
 | 001 | [Make the type check pass with one documented command](001-typecheck-baseline.md) | P1 | S |, | DONE |
 | 002 | [Build starting upgrade levels from Config](002-upgrade-levels-from-config.md) | P2 | S | 001 | DONE |
-| 003 | [Creatures as models + theme text in Config (reskin seam)](003-reskin-seam.md) | P1 | M | 001, 002 | TODO |
+| 003 | [Creatures as models + theme text in Config (reskin seam)](003-reskin-seam.md) | P1 | M | 001, 002 | IN PROGRESS, needs Studio check |
 | 004 | [Spike: design saving and a server-trusted meter](004-saving-spike.md) | P2 | M | 003, catboy ids decided | TODO |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJECTED (with one-line rationale, finding fixed independently or approach abandoned)

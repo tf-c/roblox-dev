@@ -17,7 +17,7 @@ type PlotVisual = {
 	index: number,
 	model: Model,
 	pedestals: { BasePart },
-	critters: { [number]: BasePart },
+	critters: { [number]: Model },
 }
 
 local PlotService = {}
@@ -58,11 +58,11 @@ local function showCritter(plot: PlotVisual, slot: number, creatureId: string)
 	if old then
 		old:Destroy()
 	end
-	local part = CritterVisual.make(creatureId)
+	local model = CritterVisual.make(creatureId)
 	local ped = plot.pedestals[slot]
-	part.Position = ped.Position + Vector3.new(0, ped.Size.Y / 2 + part.Size.Y / 2, 0)
-	part.Parent = plot.model
-	plot.critters[slot] = part
+	model:PivotTo(CritterVisual.restingPivot(model, ped.Position + Vector3.new(0, ped.Size.Y / 2, 0)))
+	model.Parent = plot.model
+	plot.critters[slot] = model
 end
 
 function PlotService.add(player: Player)
