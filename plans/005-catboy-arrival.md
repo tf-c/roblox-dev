@@ -162,6 +162,7 @@ Files must keep LF line endings (the repo uses LF; CRLF breaks `stylua --check`)
 - `src/server/CritterVisual.luau`
 - `src/server/ThrowService.luau`
 - `src/client/RevealController.luau`
+- `tests/run.luau` (register `Arrival.spec`; the runner lists specs by hand)
 
 **Out of scope** (do NOT touch):
 - Zone ids `lawn` / `grove` / `wildwood`, `Config.Zones`, weights, incomes, rarities, `Config.AutoCollectDelaySeconds`, `Config.Throw`, upgrade numbers. Economy stays fixed.

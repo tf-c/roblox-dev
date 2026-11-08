@@ -12,7 +12,7 @@ Context: the theme is pivoting from "toss seeds, critters sprout" to "throw a to
 | 002 | [Build starting upgrade levels from Config](002-upgrade-levels-from-config.md) | P2 | S | 001 | DONE |
 | 003 | [Creatures as models + theme text in Config (reskin seam)](003-reskin-seam.md) | P1 | M | 001, 002 | DONE |
 | 004 | [Spike: design saving and a server-trusted meter](004-saving-spike.md) | P2 | M | 003, catboy ids decided | TODO |
-| 005 | [Catboys run in to a yarn ball, 6-catboy starter slice](005-catboy-arrival.md) | P1 | M | 003 | IN PROGRESS |
+| 005 | [Catboys run in to a yarn ball, 6-catboy starter slice](005-catboy-arrival.md) | P1 | M | 003 | DONE |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJECTED (with one-line rationale, finding fixed independently or approach abandoned)
 
