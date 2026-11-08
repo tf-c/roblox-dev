@@ -69,6 +69,8 @@ export type CreatureLook = {
 	manual: ManualLook?,
 	accessoryIds: { number }?,
 	removeAccessoryIds: { number }?,
+	shirt: number?,
+	pants: number?,
 	skinColor: string?,
 	scale: { height: number?, width: number?, head: number?, proportion: number?, bodyType: number? }?,
 }
@@ -90,7 +92,8 @@ export type Creature = {
 --   zones: zone id -> spawn weight (lawn = Backyard, grove = Park, wildwood = Meadow),
 --   look: exactly one of bundleId (the number in the catalog bundle URL), outfitId, or
 --     manual = { hats = { ... }, hair = { ... }, shirt = ..., pants = ... }.
---   Optional on top of any look: accessoryIds, removeAccessoryIds, skinColor ("#rrggbb"), scale.
+--   Optional on top of any look: accessoryIds, removeAccessoryIds, shirt, pants
+--     (catalog ids), skinColor ("#rrggbb"), scale.
 -- The server builds an R15 rig from `look` at start. A look that fails to load keeps the placeholder rig.
 -- Keep every look fully clothed: no collars, leashes, chains or chokers.
 -- All items below are Roblox-made (free bodies; Kitty Ears 1374269, Fuchsia Kitty Ears 22070807,

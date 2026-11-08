@@ -127,6 +127,12 @@ local function applyOverrides(desc: HumanoidDescription, look: Config.CreatureLo
 	if look.accessoryIds then
 		desc.HatAccessory = Outfit.withAccessories(desc.HatAccessory, look.accessoryIds)
 	end
+	if look.shirt then
+		desc.Shirt = look.shirt
+	end
+	if look.pants then
+		desc.Pants = look.pants
+	end
 	if look.skinColor then
 		local color = Color3.fromHex(look.skinColor)
 		for _, part in SKIN_PARTS do

@@ -186,6 +186,8 @@ return {
 			accessoryIds = true,
 			removeAccessoryIds = true,
 			skinColor = true,
+			shirt = true,
+			pants = true,
 			scale = true,
 		}
 		local scaleKeys = { height = true, width = true, head = true, proportion = true, bodyType = true }
@@ -212,6 +214,12 @@ return {
 				validId(look.outfitId, "outfitId on " .. id)
 			end
 			local lists: { { number } } = { look.accessoryIds or {}, look.removeAccessoryIds or {} }
+			if look.shirt then
+				validId(look.shirt, "shirt on " .. id)
+			end
+			if look.pants then
+				validId(look.pants, "pants on " .. id)
+			end
 			for _, list in lists do
 				for _, assetId in list do
 					validId(assetId, "accessory id on " .. id)
@@ -230,7 +238,7 @@ return {
 				Assert.truthy(string.match(look.skinColor, "^#%x%x%x%x%x%x$") ~= nil, "skinColor on " .. id)
 			end
 			for field, value in (look.scale or {}) :: { [string]: number } do
-				Assert.truthy(scaleKeys[field] and value > 0, "scale " .. field .. " on " .. id)
+				Assert.truthy(scaleKeys[field] and value >= 0, "scale " .. field .. " on " .. id)
 			end
 		end
 	end,

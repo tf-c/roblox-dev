@@ -25,6 +25,8 @@ export type Look = {
 	manual: ManualLook?,
 	accessoryIds: { number }?, -- add on top
 	removeAccessoryIds: { number }?, -- take off the source outfit
+	shirt: number?, -- classic clothing asset id, on top of any source
+	pants: number?, -- classic clothing asset id, on top of any source
 	skinColor: string?, -- "#rrggbb", all body parts
 	scale: { height: number?, width: number?, head: number?, proportion: number?, bodyType: number? }?,
 }
