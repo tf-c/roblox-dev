@@ -3,7 +3,8 @@
 ## Planning
 - For any large or multi-file task, start in plan mode: explore the relevant code, write a full plan, and wait for my approval before changing anything.
 - Skip planning for small tasks (typos, renames, minor design tweaks). Just do them.
-- When asked, use the `improve` skill to audit the codebase and write plans detailed enough for a cheaper, faster model (e.g. Sonnet) to implement.
+- In plan mode, always use the `improve` skill to write the plan, detailed enough for a cheaper, faster model to implement without rereading the codebase.
+- After I approve a plan, hand the implementation to a Sonnet subagent (Agent tool with `model: "sonnet"`) with the plan as its brief, to save tokens. Then review its result yourself and run the Verification steps before saying it's done. This is the exception to "use subagents sparingly".
 
 ## Development Pipeline
 We are not building the game in one pass. Build from the ground up:
