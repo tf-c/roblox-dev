@@ -2,6 +2,7 @@
 -- Sanity checks on the balance tables so a typo fails here, not mid-playtest.
 local Assert = require("./assert")
 local Config = require("../src/shared/Config")
+local CreatureEntry = require("../src/shared/CreatureEntry")
 local Outfit = require("../src/shared/Outfit")
 
 local RARITIES = { common = true, rare = true, epic = true }
@@ -185,9 +186,9 @@ return {
 			manual = true,
 			accessoryIds = true,
 			removeAccessoryIds = true,
-			skinColor = true,
 			shirt = true,
 			pants = true,
+			skinColor = true,
 			scale = true,
 		}
 		local scaleKeys = { height = true, width = true, head = true, proportion = true, bodyType = true }
@@ -213,13 +214,13 @@ return {
 			if look.outfitId then
 				validId(look.outfitId, "outfitId on " .. id)
 			end
-			local lists: { { number } } = { look.accessoryIds or {}, look.removeAccessoryIds or {} }
 			if look.shirt then
 				validId(look.shirt, "shirt on " .. id)
 			end
 			if look.pants then
 				validId(look.pants, "pants on " .. id)
 			end
+			local lists: { { number } } = { look.accessoryIds or {}, look.removeAccessoryIds or {} }
 			for _, list in lists do
 				for _, assetId in list do
 					validId(assetId, "accessory id on " .. id)
@@ -240,6 +241,17 @@ return {
 			for field, value in (look.scale or {}) :: { [string]: number } do
 				Assert.truthy(scaleKeys[field] and value >= 0, "scale " .. field .. " on " .. id)
 			end
+		end
+	end,
+
+	["every creature passes CreatureEntry.validate"] = function()
+		local zoneIds = {}
+		for _, zone in Config.Zones do
+			table.insert(zoneIds, zone.id)
+		end
+		for id, def in Config.Creatures do
+			local problems = CreatureEntry.validate(id, def :: any, zoneIds)
+			Assert.eq(#problems, 0, id .. ": " .. table.concat(problems, "; "))
 		end
 	end,
 
