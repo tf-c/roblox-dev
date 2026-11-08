@@ -13,6 +13,7 @@ Context: the theme is pivoting from "toss seeds, critters sprout" to "throw a to
 | 003 | [Creatures as models + theme text in Config (reskin seam)](003-reskin-seam.md) | P1 | M | 001, 002 | DONE |
 | 004 | [Spike: design saving and a server-trusted meter](004-saving-spike.md) | P2 | M | 003, catboy ids decided | TODO |
 | 005 | [Catboys run in to a yarn ball, 6-catboy starter slice](005-catboy-arrival.md) | P1 | M | 003 | DONE |
+| 006 | [Catboys wear R15 rigs built from catalog bundles](006-bundle-rigs.md) | P1 | M | 003, 005 | DONE (fallback verified in Studio; bundle and failure paths wait for real bundle ids) |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJECTED (with one-line rationale, finding fixed independently or approach abandoned)
 
@@ -21,6 +22,7 @@ Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJE
 - 002 and 003 use the type check commands documented by 001 as their verification gates.
 - 003 depends on 002 only because both touch `src/server/PlayerState.luau`. Doing 002 first keeps 003's drift check simple.
 - 004 needs 003 and the final catboy creature ids, because the save stores creature ids and its migration design depends on them.
+- 006 (planned at `e437e21`) is part 1 of the owner's four-part spec (NPC rigs, UI, music, 30-hour progression). The other three parts wait for the layers below them: UI and progression need saving (004) and the playtest verdict; music needs nothing, but the owner ranked it after UI. Spec "units" are Creatures, collected by throwing; no egg summons.
 - 005 sets the starter catboy ids (pillow, slipper, pickle, caramel, satin, linden) that 004's save migration will store.
 
 ## Findings considered and rejected

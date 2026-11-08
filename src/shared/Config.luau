@@ -66,6 +66,13 @@ Config.Creatures = {
 	linden = { name = "Linden", rarity = "epic", income = 80, color = "#c8a2e8" },
 } :: { [string]: Creature }
 
+-- Catalog bundle each catboy wears (server builds an R15 rig from it at start).
+-- A creature with no entry, or whose bundle fails to load, keeps the placeholder rig.
+-- accessoryIds: extra catalog accessories (e.g. cat ears) added on top of the bundle's outfit.
+-- Keep every look fully clothed: no collars, leashes, chains or chokers.
+export type CreatureBundle = { bundleId: number, accessoryIds: { number }? }
+Config.CreatureBundles = {} :: { [string]: CreatureBundle }
+
 -- Derived lookup for Income.perSecond: creature id -> cash per second.
 Config.CreatureIncome = {} :: { [string]: number }
 for id, creature in Config.Creatures do

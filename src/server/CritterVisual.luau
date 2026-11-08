@@ -1,12 +1,13 @@
 --!strict
--- Creature look: a Model (a rig from ServerStorage.CreatureModels named after the creature id,
--- else a blocky placeholder catboy) with a name tag. Used in the field and on plots.
+-- Creature look: a Model with a name tag. Source, in order: a rig from ServerStorage.CreatureModels
+-- named after the creature id, a catalog-bundle rig (CreatureRigs), else a blocky placeholder catboy. Used in the field and on plots.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 local TweenService = game:GetService("TweenService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
+local CreatureRigs = require(script.Parent.CreatureRigs)
 
 local CritterVisual = {}
 
@@ -104,11 +105,22 @@ local function fromTemplate(creatureId: string): Model?
 	return nil
 end
 
+-- A catalog-bundle rig built at server start (see CreatureRigs), scaled by rarity.
+local function fromBundle(creatureId: string): Model?
+	local template = CreatureRigs.get(creatureId)
+	if not template then
+		return nil
+	end
+	local model = template:Clone()
+	model:ScaleTo(SCALE_BY_RARITY[Config.Creatures[creatureId].rarity] or 1)
+	return model
+end
+
 function CritterVisual.make(creatureId: string): Model
 	local def = Config.Creatures[creatureId]
 	assert(def, "unknown critter " .. creatureId)
 
-	local model = fromTemplate(creatureId) or placeholder(creatureId)
+	local model = fromTemplate(creatureId) or fromBundle(creatureId) or placeholder(creatureId)
 	local primary = model.PrimaryPart :: BasePart
 	for _, inst in model:GetDescendants() do
 		if inst:IsA("BasePart") then

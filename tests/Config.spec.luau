@@ -172,4 +172,15 @@ return {
 		Assert.truthy(a.edgeMargin >= 0, "edgeMargin")
 		Assert.truthy(a.runSeconds + a.hopSeconds < Config.AutoCollectDelaySeconds, "timing budget")
 	end,
+
+	["creature bundles name known creatures and valid ids"] = function()
+		for id, look in Config.CreatureBundles do
+			Assert.truthy(Config.Creatures[id] ~= nil, "unknown creature " .. id)
+			Assert.truthy(look.bundleId > 0 and look.bundleId % 1 == 0, "bundleId on " .. id)
+			local accessoryIds: { number } = look.accessoryIds or {}
+			for _, accessoryId in accessoryIds do
+				Assert.truthy(accessoryId > 0 and accessoryId % 1 == 0, "accessoryId on " .. id)
+			end
+		end
+	end,
 }

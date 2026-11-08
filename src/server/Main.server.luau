@@ -4,6 +4,7 @@
 
 local Players = game:GetService("Players")
 
+local CreatureRigs = require(script.Parent.CreatureRigs)
 local MapBuilder = require(script.Parent.MapBuilder)
 local PlayerState = require(script.Parent.PlayerState)
 local PlotService = require(script.Parent.PlotService)
@@ -11,6 +12,7 @@ local ThrowService = require(script.Parent.ThrowService)
 local TrainService = require(script.Parent.TrainService)
 
 MapBuilder.build()
+CreatureRigs.preload()
 TrainService.init()
 PlotService.init()
 ThrowService.init()

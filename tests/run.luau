@@ -17,6 +17,7 @@ local specs: { { name: string, cases: Spec } } = {
 	{ name = "Arrival", cases = require("./Arrival.spec") :: any },
 	{ name = "Upgrade", cases = require("./Upgrade.spec") :: any },
 	{ name = "Pacing", cases = require("./Pacing.spec") :: any },
+	{ name = "Outfit", cases = require("./Outfit.spec") :: any },
 }
 
 -- Guard against a new spec file that was never registered above.
