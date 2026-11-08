@@ -21,17 +21,18 @@ Roblox skills in `.claude/skills/` (from AshExplained/roblox-skills):
 - `roblox-asset-pipeline`: finding, generating, and importing assets.
 - `roblox-economy-balancing`: currencies, sinks, reward curves.
 - `roblox-admin-tools-observability`: admin commands, audit logs, diagnostics.
-- `roblox-code-maintenance-refactor`: cleanup of Roblox Luau code. For Roblox code, this one leads. Use `improve-codebase-architecture` / `thermonuclear-code-quality-review` only when I name them, and never mix behavior changes with cleanup.
+- `roblox-code-maintenance-refactor`: Roblox-specific cleanup checklist. Use it when I name it; for reviews and cleanup, the pair below leads.
 - `handoff`: writes a handoff note to `.scratch/handoffs/` so a fresh session can continue.
 
 These skills sometimes point to other roblox-skills that aren't installed here. If one is needed, tell me rather than improvising it.
 
+Coding and review defaults:
+- `ponytail`: use for all coding. The smallest change that fully solves the task.
+- `improve-codebase-architecture` + `thermonuclear-code-quality-review`: the default pair for code reviews and cleanup, run together. Never mix behavior changes with cleanup; commit them separately.
+
 Other skills. Use these when relevant, or when I name them:
 - `grill-with-docs`: question me to refine requirements before building.
-- `improve-codebase-architecture`: structural improvements.
-- `thermonuclear-code-quality-review`: simplify generated code and remove slop. Pair it with improve-codebase-architecture.
 - `improve`: codebase audit and plan writing.
-- `ponytail`
 
 ## Verification (required before saying a task is done)
 - Write tests first, then implement. Never write tests after the fact just to pass your own code.
@@ -45,7 +46,7 @@ Other skills. Use these when relevant, or when I name them:
 - If my prompt is vague, ask a short clarifying question instead of reading the whole codebase to guess.
 - Use the files and sources I point you to first.
 - Treat each session as one task. If I start a new, unrelated task, suggest a fresh session.
-- If context passes about 150k tokens, tell me and suggest starting a new session. If we must compact, ask what I want kept first.
+- When context reaches about 200k tokens or about 50% of the window (whichever comes first), alert me and offer to write a `handoff` so a fresh session can continue. If we must compact, ask what I want kept first.
 - Use subagents sparingly, only when the quality gain is worth the token cost.
 
 ## Tools
