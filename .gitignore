@@ -1,0 +1,17 @@
+# Roblox place/model files (binary; keep source in .luau instead)
+*.rbxl
+*.rbxlx
+*.rbxl.lock
+*.rbxlx.lock
+*.rbxm
+
+# Rojo / Wally output
+sourcemap.json
+Packages/
+ServerPackages/
+DevPackages/
+
+# Editor / OS
+.vscode/
+.DS_Store
+Thumbs.db
