@@ -1,6 +1,6 @@
 --!strict
--- The reveal moment: seed arcs down the lane, distance and zone pop up, then a
--- rarity-colored burst and the critter's name. Epic adds a bigger burst and a camera shake.
+-- The reveal moment: the toy arcs down the lane and lands on a glowing ring, distance and zone pop up, then a
+-- rarity-colored burst and the creature's name. Epic adds a bigger burst and a camera shake.
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -36,6 +36,33 @@ local function quality(mult: number): string
 	return "Weak"
 end
 
+-- The toy rests on a glowing ring for a moment, then ring and toy fade out.
+local function landRing(landPos: Vector3, projectile: BasePart)
+	local ring = Instance.new("Part")
+	ring.Name = "LandingRing"
+	ring.Shape = Enum.PartType.Cylinder
+	ring.Size = Vector3.new(0.2, 6, 6)
+	ring.CFrame = CFrame.new(landPos + Vector3.new(0, 0.1, 0)) * CFrame.Angles(0, 0, math.rad(90))
+	ring.Color = Color3.fromRGB(255, 240, 180)
+	ring.Material = Enum.Material.Neon
+	ring.Transparency = 0.3
+	ring.Anchored = true
+	ring.CanCollide = false
+	ring.CanQuery = false
+	ring.Parent = Workspace
+
+	task.delay(Config.Projectile.restSeconds, function()
+		local info = TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+		local fade = TweenService:Create(ring, info, { Transparency = 1 })
+		TweenService:Create(projectile, info, { Transparency = 1 }):Play()
+		fade.Completed:Connect(function()
+			ring:Destroy()
+			projectile:Destroy()
+		end)
+		fade:Play()
+	end)
+end
+
 local function flyProjectile(origin: Vector3, landPos: Vector3)
 	local s = Config.Projectile.size
 	local projectile = Instance.new("Part")
@@ -43,7 +70,7 @@ local function flyProjectile(origin: Vector3, landPos: Vector3)
 	projectile.Shape = Enum.PartType.Ball
 	projectile.Size = Vector3.new(s, s, s)
 	projectile.Color = Color3.fromHex(Config.Projectile.color)
-	projectile.Material = Enum.Material.Neon
+	projectile.Material = Enum.Material.Fabric
 	projectile.Anchored = true
 	projectile.CanCollide = false
 	projectile.CanQuery = false
@@ -72,7 +99,8 @@ local function flyProjectile(origin: Vector3, landPos: Vector3)
 		projectile.Position = flat + Vector3.new(0, 4 * height * t * (1 - t), 0)
 		if t >= 1 then
 			conn:Disconnect()
-			projectile:Destroy()
+			projectile.Position = landPos + Vector3.new(0, s / 2, 0)
+			landRing(landPos, projectile)
 		end
 	end)
 end

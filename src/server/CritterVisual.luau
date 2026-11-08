@@ -1,6 +1,6 @@
 --!strict
 -- Creature look: a Model (a rig from ServerStorage.CreatureModels named after the creature id,
--- else a placeholder ball) with a name tag. Used in the field and on plots.
+-- else a blocky placeholder catboy) with a name tag. Used in the field and on plots.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
@@ -10,25 +10,57 @@ local Config = require(ReplicatedStorage.Shared.Config)
 
 local CritterVisual = {}
 
-local SIZE_BY_RARITY: { [string]: number } = { common = 3, rare = 4, epic = 5.5 }
+local SCALE_BY_RARITY: { [string]: number } = { common = 1, rare = 1.2, epic = 1.5 }
+local SKIN = Color3.fromHex("#f3d2b3")
+local PANTS = Color3.fromHex("#4b4f63")
+local EYES = Color3.fromHex("#222222")
 
 local warned: { [string]: boolean } = {}
 
+local function limb(name: string, size: Vector3, offset: CFrame, color: Color3, parent: Model): Part
+	local part = Instance.new("Part")
+	part.Name = name
+	part.Size = size
+	part.CFrame = offset
+	part.Color = color
+	part.Material = Enum.Material.SmoothPlastic
+	part.Anchored = true
+	part.Parent = parent
+	return part
+end
+
+-- A blocky, fully clothed catboy facing -Z (toward the player). Centered on the torso.
 local function placeholder(creatureId: string): Model
 	local def = Config.Creatures[creatureId]
-	local size = SIZE_BY_RARITY[def.rarity] or 3
+	local coat = Color3.fromHex(def.color)
+	local outfit = coat:Lerp(Color3.new(1, 1, 1), 0.55)
 
 	local model = Instance.new("Model")
 	model.Name = def.name
 
-	local part = Instance.new("Part")
-	part.Name = "Body"
-	part.Shape = Enum.PartType.Ball
-	part.Size = Vector3.new(size, size, size)
-	part.Color = Color3.fromHex(def.color)
-	part.Material = Enum.Material.SmoothPlastic
-	part.Parent = model
-	model.PrimaryPart = part
+	local body = limb("Body", Vector3.new(2, 2, 1), CFrame.new(0, 0, 0), outfit, model)
+	limb("LeftLeg", Vector3.new(0.9, 2, 0.9), CFrame.new(-0.5, -2, 0), PANTS, model)
+	limb("RightLeg", Vector3.new(0.9, 2, 0.9), CFrame.new(0.5, -2, 0), PANTS, model)
+	limb("LeftArm", Vector3.new(0.8, 1.9, 0.8), CFrame.new(-1.45, 0.05, 0), outfit, model)
+	limb("RightArm", Vector3.new(0.8, 1.9, 0.8), CFrame.new(1.45, 0.05, 0), outfit, model)
+	limb("Head", Vector3.new(1.8, 1.8, 1.6), CFrame.new(0, 1.9, 0), SKIN, model)
+	limb("Hair", Vector3.new(1.9, 0.5, 1.7), CFrame.new(0, 2.75, 0.05), coat, model)
+	local earSize = Vector3.new(0.45, 0.7, 0.35)
+	limb("LeftEar", earSize, CFrame.new(-0.6, 3.25, 0) * CFrame.Angles(0, 0, math.rad(20)), coat, model)
+	limb("RightEar", earSize, CFrame.new(0.6, 3.25, 0) * CFrame.Angles(0, 0, math.rad(-20)), coat, model)
+	local eyeSize = Vector3.new(0.25, 0.35, 0.1)
+	limb("LeftEye", eyeSize, CFrame.new(-0.4, 2.0, -0.81), EYES, model)
+	limb("RightEye", eyeSize, CFrame.new(0.4, 2.0, -0.81), EYES, model)
+	limb(
+		"Tail",
+		Vector3.new(0.35, 0.35, 2.2),
+		CFrame.new(0, -0.6, 1.4) * CFrame.Angles(math.rad(35), 0, 0),
+		coat,
+		model
+	)
+
+	model.PrimaryPart = body
+	model:ScaleTo(SCALE_BY_RARITY[def.rarity] or 1)
 	return model
 end
 
@@ -85,6 +117,29 @@ function CritterVisual.make(creatureId: string): Model
 	label.Parent = tag
 
 	return model
+end
+
+-- Hide the name tag until the creature has arrived.
+function CritterVisual.hideTag(model: Model)
+	local tag = (model.PrimaryPart :: BasePart):FindFirstChildOfClass("BillboardGui")
+	if not tag then
+		return
+	end
+	tag.Enabled = false
+end
+
+-- Show the name tag with a quick pop (size 0 -> full).
+function CritterVisual.popTag(model: Model)
+	local tag = (model.PrimaryPart :: BasePart):FindFirstChildOfClass("BillboardGui")
+	if not tag then
+		return
+	end
+	local full = tag.Size
+	tag.Size = UDim2.fromOffset(0, 0)
+	tag.Enabled = true
+	TweenService
+		:Create(tag, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Size = full })
+		:Play()
 end
 
 -- Pivot that puts the model's lowest point on `ground`.

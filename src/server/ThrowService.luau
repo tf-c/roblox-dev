@@ -1,9 +1,9 @@
 --!strict
 -- The server decides the throw. The client sends only the meter timing (0..1).
 -- Server: distance from Power + timing, zone from distance, free weighted roll,
--- then a critter sprouts where the seed lands.
+-- then a creature runs in to where the toy lands.
 --
--- A thrown critter is "pending" until it leaves by exactly one path: collected,
+-- A thrown creature is "pending" until it leaves by exactly one path: collected,
 -- wandered off (timeout) or owner left. All three go through takePending.
 --
 -- Known prototype gap: a modified client can always send a perfect timing.
@@ -12,6 +12,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 
+local Arrival = require(ReplicatedStorage.Shared.Arrival)
 local Config = require(ReplicatedStorage.Shared.Config)
 local Distance = require(ReplicatedStorage.Shared.Distance)
 local WeightedRoll = require(ReplicatedStorage.Shared.WeightedRoll)
@@ -33,14 +34,14 @@ local nextToken = 0
 local fieldFolder = Instance.new("Folder")
 fieldFolder.Name = "FieldCritters"
 
--- The player's pending critter, if it is still the throw identified by `token`.
+-- The player's pending creature, if it is still the throw identified by `token`.
 local function current(player: Player, token: number): PlayerState.Pending?
 	local state = PlayerState.get(player)
 	local pending = if state then state.pending else nil
 	return if pending and pending.token == token then pending else nil
 end
 
--- Removes the pending critter (model included) if it is still `token`. Returns it, or nil if it already left.
+-- Removes the pending creature (model included) if it is still `token`. Returns it, or nil if it already left.
 local function takePending(player: Player, token: number): PlayerState.Pending?
 	local pending = current(player, token)
 	if not pending then
@@ -61,20 +62,55 @@ local function collect(player: Player, token: number)
 	end
 end
 
-local function sprout(player: Player, token: number, creatureId: string, landPos: Vector3)
+local function arrive(player: Player, token: number, creatureId: string, landPos: Vector3)
 	local pending = current(player, token)
 	if not pending then
 		return
 	end
 
 	local model = CritterVisual.make(creatureId)
-	local rest = CritterVisual.restingPivot(model, landPos)
-	local _, size = model:GetBoundingBox()
-	model:PivotTo(rest - Vector3.new(0, size.Y, 0)) -- start underground
+	CritterVisual.hideTag(model)
+	local rest = CritterVisual.restingPivot(model, landPos) -- identity rotation: faces the player
+	local startX = Arrival.startX(landPos.X, Config.Map.laneWidth, Config.Arrival.edgeMargin)
+	local startPos = Vector3.new(startX, rest.Position.Y, rest.Position.Z)
+	-- Face the toy while running.
+	local runFacing = CFrame.lookAt(startPos, rest.Position) - startPos
+	model:PivotTo(runFacing + startPos)
 	model:SetAttribute("OwnerUserId", player.UserId)
 	model.Parent = fieldFolder
 	pending.model = model
-	CritterVisual.tweenTo(model, rest, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out))
+
+	task.spawn(function()
+		local a = Config.Arrival
+		local half = a.hopSeconds / 2
+		CritterVisual.tweenTo(
+			model,
+			runFacing + rest.Position,
+			TweenInfo.new(a.runSeconds, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+		).Completed
+			:Wait()
+		if not current(player, token) then
+			return
+		end
+		CritterVisual.tweenTo(
+			model,
+			rest + Vector3.new(0, a.hopHeight, 0),
+			TweenInfo.new(half, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+		).Completed
+			:Wait()
+		if not current(player, token) then
+			return
+		end
+		CritterVisual.tweenTo(
+			model,
+			rest,
+			TweenInfo.new(half, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+		).Completed
+			:Wait()
+		if current(player, token) then
+			CritterVisual.popTag(model)
+		end
+	end)
 
 	if Config.CollectMode == "walk" then
 		local prompt = Instance.new("ProximityPrompt")
@@ -104,7 +140,7 @@ local function sprout(player: Player, token: number, creatureId: string, landPos
 		end)
 	end
 
-	-- Never let an ignored critter block throwing forever.
+	-- Never let an ignored creature block throwing forever.
 	task.delay(Config.PendingTimeoutSeconds, function()
 		if takePending(player, token) then
 			Remotes.toast(player, string.format(Config.Text.wanderedOff, Config.Creatures[creatureId].name))
@@ -148,7 +184,7 @@ local function onThrow(player: Player, timing: any)
 		landPos = landPos,
 	})
 
-	task.delay(Config.Throw.arcSeconds, sprout, player, token, creatureId, landPos)
+	task.delay(Config.Throw.arcSeconds, arrive, player, token, creatureId, landPos)
 end
 
 function ThrowService.init()
@@ -156,7 +192,7 @@ function ThrowService.init()
 	Remotes.throw.OnServerEvent:Connect(onThrow)
 end
 
--- Owner left: drop their pending critter. Call before PlayerState.remove.
+-- Owner left: drop their pending creature. Call before PlayerState.remove.
 function ThrowService.forget(player: Player)
 	local state = PlayerState.get(player)
 	if state and state.pending then
