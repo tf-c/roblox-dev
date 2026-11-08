@@ -3,6 +3,11 @@
 -- leaderstats mirror Power and Cash; attributes on the Player tell the client
 -- what it can do (HasPending, PlotCount, and one <upgradeId>Level per upgrade ladder).
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Config = require(ReplicatedStorage.Shared.Config)
+local Upgrade = require(ReplicatedStorage.Shared.Upgrade)
+
 export type Pending = {
 	token: number,
 	creatureId: string,
@@ -35,7 +40,7 @@ function PlayerState.add(player: Player)
 		cash = 0,
 		plot = {},
 		pending = nil,
-		levels = { trowel = 0, plotSlots = 0 },
+		levels = Upgrade.startLevels(Config.UpgradeOrder),
 		lastThrow = -math.huge,
 	}
 	states[player] = state

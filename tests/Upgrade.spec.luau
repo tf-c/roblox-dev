@@ -1,5 +1,6 @@
 --!strict
 local Assert = require("./assert")
+local Config = require("../src/shared/Config")
 local Upgrade = require("../src/shared/Upgrade")
 
 local ladder: Upgrade.Ladder = {
@@ -30,5 +31,23 @@ return {
 
 	["max value is the last level's value"] = function()
 		Assert.eq(Upgrade.maxValue(ladder), 5)
+	end,
+
+	["startLevels gives every listed ladder level 0"] = function()
+		local levels = Upgrade.startLevels({ "a", "b" })
+		Assert.eq(levels.a, 0)
+		Assert.eq(levels.b, 0)
+		local count = 0
+		for _ in levels do
+			count += 1
+		end
+		Assert.eq(count, 2)
+	end,
+
+	["startLevels covers Config.UpgradeOrder"] = function()
+		local levels = Upgrade.startLevels(Config.UpgradeOrder)
+		for _, id in Config.UpgradeOrder do
+			Assert.eq(levels[id], 0)
+		end
 	end,
 }

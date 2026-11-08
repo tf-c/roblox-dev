@@ -21,4 +21,13 @@ function Upgrade.maxValue(ladder: Ladder): number
 	return ladder.levels[#ladder.levels].value
 end
 
+-- Level 0 for every ladder id in `order` (Config.UpgradeOrder): a new player's levels.
+function Upgrade.startLevels(order: { string }): { [string]: number }
+	local levels: { [string]: number } = {}
+	for _, id in order do
+		levels[id] = 0
+	end
+	return levels
+end
+
 return Upgrade

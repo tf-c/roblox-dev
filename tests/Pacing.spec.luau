@@ -28,7 +28,7 @@ local function simulate(seed: number): Result
 
 	local t, power, cash = 0, 0, 0
 	local plot: { [number]: string } = {}
-	local levels: { [string]: number } = { trowel = 0, plotSlots = 0 }
+	local levels: { [string]: number } = Upgrade.startLevels(Config.UpgradeOrder)
 	local firstBuy, firstWildwood, lastBuy = math.huge, math.huge, math.huge
 
 	local function allBought(): boolean
