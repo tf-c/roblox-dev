@@ -15,3 +15,6 @@ DevPackages/
 .vscode/
 .DS_Store
 Thumbs.db
+
+# Handoff notes written by the handoff skill
+.scratch/
