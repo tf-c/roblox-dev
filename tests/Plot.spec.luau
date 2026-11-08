@@ -30,4 +30,21 @@ return {
 			Plot.choose(full(), "typo", income, 4)
 		end)
 	end,
+
+	["parseIds: empty string is an empty list"] = function()
+		Assert.eq(#Plot.parseIds(""), 0)
+	end,
+
+	["parseIds: one id"] = function()
+		local ids = Plot.parseIds("pillow")
+		Assert.eq(#ids, 1)
+		Assert.eq(ids[1], "pillow")
+	end,
+
+	["parseIds: keeps slot order"] = function()
+		local ids = Plot.parseIds("pillow,slipper")
+		Assert.eq(#ids, 2)
+		Assert.eq(ids[1], "pillow")
+		Assert.eq(ids[2], "slipper")
+	end,
 }

@@ -28,4 +28,9 @@ function Plot.choose(
 	return if newIncome > worstIncome then worstSlot else nil
 end
 
+-- Creature ids from the PlotCreatures attribute ("pillow,slipper"), in slot order.
+function Plot.parseIds(csv: string): { string }
+	return if csv == "" then {} else string.split(csv, ",")
+end
+
 return Plot

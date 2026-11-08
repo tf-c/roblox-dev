@@ -1,11 +1,13 @@
 --!strict
--- Client entry: builds the HUD and wires the meter, training, reveal, stats and upgrades.
+-- Client entry: builds the HUD and wires the meter, training, reveal, stats, upgrades and the Catboys window.
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UserInputService = game:GetService("UserInputService")
 
 local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"))
 local Upgrade = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Upgrade"))
+local CatboysWindow = require(script.Parent.CatboysWindow)
 local Hud = require(script.Parent.Hud)
 local MeterController = require(script.Parent.MeterController)
 local RevealController = require(script.Parent.RevealController)
@@ -18,6 +20,15 @@ local function remote(name: string): RemoteEvent
 end
 
 local hud = Hud.create()
+local catboys = CatboysWindow.create(hud.gui)
+hud.catboysButton.Activated:Connect(function()
+	CatboysWindow.toggle(catboys)
+end)
+UserInputService.InputBegan:Connect(function(input, processed)
+	if not processed and input.KeyCode == Enum.KeyCode.C then
+		CatboysWindow.toggle(catboys)
+	end
+end)
 MeterController.init(hud, remote("Throw"))
 TrainController.init(hud, remote("Train"))
 RevealController.init(hud, remote("ThrowResult"))
@@ -39,21 +50,20 @@ local function refresh()
 		(player:GetAttribute("PlotCount") or 0) :: number,
 		Upgrade.value(Config.Upgrades.plotSlots, (player:GetAttribute("plotSlotsLevel") or 0) :: number)
 	)
-	for id, button in hud.upgrades do
+	hud.catboysBadge.Text = tostring((player:GetAttribute("PlotCount") or 0) :: number)
+	for id, entry in hud.upgrades do
 		local ladder = Config.Upgrades[id]
 		local level = (player:GetAttribute(id .. "Level") or 0) :: number
 		local price = Upgrade.nextPrice(ladder, level)
-		button.Visible = price ~= nil
 		if price ~= nil then
-			button.Text = string.format(
-				"%s: " .. ladder.text .. "\n%d cash",
-				ladder.name,
-				Upgrade.value(ladder, level + 1),
-				price
-			)
-			button.BackgroundColor3 = if cashValue.Value >= price
+			entry.caption.Text = string.format(Config.Text.upgradePrice, price)
+			entry.button.BackgroundColor3 = if cashValue.Value >= price
 				then Color3.fromRGB(220, 150, 40)
 				else Color3.fromRGB(80, 80, 80)
+		else
+			entry.caption.Text = Config.Text.upgradeMax
+			entry.button.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+			entry.button.Active = false
 		end
 	end
 end
@@ -61,9 +71,9 @@ end
 powerValue.Changed:Connect(refresh)
 cashValue.Changed:Connect(refresh)
 player:GetAttributeChangedSignal("PlotCount"):Connect(refresh)
-for id, button in hud.upgrades do
+for id, entry in hud.upgrades do
 	player:GetAttributeChangedSignal(id .. "Level"):Connect(refresh)
-	button.Activated:Connect(function()
+	entry.button.Activated:Connect(function()
 		remote("BuyUpgrade"):FireServer(id)
 	end)
 end

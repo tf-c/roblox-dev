@@ -15,6 +15,7 @@ Context: the theme is pivoting from "toss seeds, critters sprout" to "throw a to
 | 005 | [Catboys run in to a yarn ball, 6-catboy starter slice](005-catboy-arrival.md) | P1 | M | 003 | DONE |
 | 007 | [One Config entry per catboy and a command-bar rig maker](007-creature-maker.md) | P1 | M | 006 | DONE |
 | 006 | [Catboys wear R15 rigs built from catalog bundles](006-bundle-rigs.md) | P1 | M | 003, 005 | DONE (fallback verified in Studio; bundle and failure paths wait for real bundle ids) |
+| 008 | [Catboys window and side HUD column](008-catboys-window.md) | P1 | M | 007 | DONE (desktop verified in Studio; phone emulator check pending) |
 
 Status values: TODO | IN PROGRESS | DONE | BLOCKED (with one-line reason) | REJECTED (with one-line rationale, finding fixed independently or approach abandoned)
 

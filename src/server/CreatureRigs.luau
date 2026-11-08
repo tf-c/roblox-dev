@@ -1,6 +1,7 @@
 --!strict
 -- Builds an R15 rig per Config.Creatures look once at server start and caches it.
 -- CritterVisual clones from the cache, so making a Creature never waits on the web.
+-- Also publishes a preview copy to ReplicatedStorage.CreaturePreviews for the Catboys window.
 -- To make an editable copy, run in the command bar (edit mode):
 --   require(game.ServerScriptService.Server.CreatureRigs).saveModel("pillow")
 
@@ -20,6 +21,8 @@ local RETRY_SECONDS = 2
 local bundleDescriptions: { [number]: HumanoidDescription } = {}
 local outfitDescriptions: { [number]: HumanoidDescription } = {}
 local rigs: { [string]: Model } = {}
+local warned: { [string]: boolean } = {}
+local previewFolder: Folder
 
 -- Web calls can fail or time out: try a few times before giving up.
 local function retry(fn: () -> any): (boolean, any)
@@ -180,18 +183,58 @@ function CreatureRigs.buildLook(look: Config.CreatureLook, name: string): (Model
 	return model, ""
 end
 
+-- The hand-saved ServerStorage.CreatureModels.<id> (the template itself, not a clone), or nil.
+function CreatureRigs.saved(creatureId: string): Model?
+	local folder = ServerStorage:FindFirstChild("CreatureModels")
+	local template = folder and folder:FindFirstChild(creatureId)
+	if not template then
+		return nil
+	end
+	if template:IsA("Model") and template.PrimaryPart then
+		return template
+	end
+	if not warned[creatureId] then
+		warned[creatureId] = true
+		warn("CreatureModels." .. creatureId .. " must be a Model with a PrimaryPart; using the placeholder")
+	end
+	return nil
+end
+
 local function build(creatureId: string)
 	local def = Config.Creatures[creatureId]
 	local model, reason = CreatureRigs.buildLook(def.look, def.name)
-	if not model then
+	if model then
+		rigs[creatureId] = model
+	else
 		warn("CreatureRigs: " .. creatureId .. ": " .. reason .. "; using the placeholder")
-		return
 	end
-	rigs[creatureId] = model
+	local source = CreatureRigs.saved(creatureId) or model
+	if source then
+		local preview = source:Clone()
+		preview.Name = creatureId
+		for _, inst in preview:GetDescendants() do
+			if inst:IsA("BasePart") then
+				inst.Anchored = true
+			elseif inst:IsA("Humanoid") then
+				inst.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+			elseif inst:IsA("Script") or inst:IsA("LocalScript") then
+				inst:Destroy()
+			end
+		end
+		preview.Parent = previewFolder
+	end
 end
 
 -- Starts one build per creature; returns immediately.
 function CreatureRigs.preload()
+	local existing = ReplicatedStorage:FindFirstChild("CreaturePreviews")
+	if existing then
+		previewFolder = existing :: Folder
+	else
+		previewFolder = Instance.new("Folder")
+		previewFolder.Name = "CreaturePreviews"
+		previewFolder.Parent = ReplicatedStorage
+	end
 	for creatureId in Config.Creatures do
 		task.spawn(build, creatureId)
 	end

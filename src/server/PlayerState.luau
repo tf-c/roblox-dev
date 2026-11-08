@@ -1,7 +1,7 @@
 --!strict
 -- In-memory player state for the prototype. Saving waits until the loop proves fun.
 -- leaderstats mirror Power and Cash; attributes on the Player tell the client
--- what it can do (HasPending, PlotCount, and one <upgradeId>Level per upgrade ladder).
+-- what it can do (HasPending, PlotCount, PlotCreatures, and one <upgradeId>Level per upgrade ladder).
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -93,6 +93,8 @@ function PlayerState.sync(player: Player)
 		player:SetAttribute(id .. "Level", level)
 	end
 	player:SetAttribute("PlotCount", count)
+	-- state.plot is contiguous (slots fill first-free and are only replaced), so concat keeps slot order.
+	player:SetAttribute("PlotCreatures", table.concat(state.plot :: { string }, ","))
 end
 
 return PlayerState

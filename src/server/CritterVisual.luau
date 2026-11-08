@@ -3,7 +3,6 @@
 -- named after the creature id (make one with CreatureRigs.saveModel), the Config look rig (CreatureRigs), else a blocky placeholder catboy. Used in the field and on plots.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local ServerStorage = game:GetService("ServerStorage")
 local TweenService = game:GetService("TweenService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
@@ -15,8 +14,6 @@ local SCALE_BY_RARITY: { [string]: number } = { common = 1, rare = 1.2, epic = 1
 local SKIN = Color3.fromHex("#f3d2b3")
 local PANTS = Color3.fromHex("#4b4f63")
 local EYES = Color3.fromHex("#222222")
-
-local warned: { [string]: boolean } = {}
 
 -- `shape` lets a limb be another part type (the ears are wedges); default is a block.
 local function limb(
@@ -90,19 +87,8 @@ local function placeholder(creatureId: string): Model
 end
 
 local function fromTemplate(creatureId: string): Model?
-	local folder = ServerStorage:FindFirstChild("CreatureModels")
-	local template = folder and folder:FindFirstChild(creatureId)
-	if not template then
-		return nil
-	end
-	if template:IsA("Model") and template.PrimaryPart then
-		return template:Clone()
-	end
-	if not warned[creatureId] then
-		warned[creatureId] = true
-		warn("CreatureModels." .. creatureId .. " must be a Model with a PrimaryPart; using the placeholder")
-	end
-	return nil
+	local template = CreatureRigs.saved(creatureId)
+	return if template then template:Clone() else nil
 end
 
 -- A catalog-bundle rig built at server start (see CreatureRigs), scaled by rarity.

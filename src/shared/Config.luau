@@ -187,6 +187,13 @@ Config.Text = {
 	walkHint = "Walk to your catboy to collect it",
 	plotReleased = "Plot full: %s was released",
 	plotReplaced = "Plot full: %s replaced %s",
+	catboysTitle = "Catboys",
+	catboysSlots = "%d/%d slots",
+	catboysEmpty = "No catboys yet. Throw the yarn ball to find one.",
+	emptySlot = "Empty slot",
+	incomePerSecond = "+%d/s",
+	upgradeMax = "Max",
+	upgradePrice = "%d cash",
 }
 
 -- The Toy the player throws down the lane (client visual only). It rests on a glowing ring for `restSeconds` after landing.
@@ -246,6 +253,9 @@ Config.Upgrades = {
 
 -- HUD button order, top to bottom.
 Config.UpgradeOrder = { "trowel", "plotSlots" }
+
+-- Side HUD icons (rbxassetid://...), keyed by "catboys" and upgrade id. Empty = text-only button.
+Config.Icons = { catboys = "", trowel = "", plotSlots = "" } :: { [string]: string }
 
 -- Placeholder map layout (studs). The lane runs along +Z from the pad.
 Config.Map = {
