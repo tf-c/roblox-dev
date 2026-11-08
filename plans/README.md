@@ -8,7 +8,7 @@ Context: the theme is pivoting from "toss seeds, critters sprout" to "throw a to
 
 | Plan | Title | Priority | Effort | Depends on | Status |
 |------|-------|----------|--------|------------|--------|
-| 001 | [Make the type check pass with one documented command](001-typecheck-baseline.md) | P1 | S |, | TODO |
+| 001 | [Make the type check pass with one documented command](001-typecheck-baseline.md) | P1 | S |, | DONE |
 | 002 | [Build starting upgrade levels from Config](002-upgrade-levels-from-config.md) | P2 | S | 001 | TODO |
 | 003 | [Creatures as models + theme text in Config (reskin seam)](003-reskin-seam.md) | P1 | M | 001, 002 | TODO |
 | 004 | [Spike: design saving and a server-trusted meter](004-saving-spike.md) | P2 | M | 003, catboy ids decided | TODO |

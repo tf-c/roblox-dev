@@ -54,8 +54,8 @@ return {
 	end,
 
 	["timing is clamped to 0..1"] = function()
-		Assert.eq(Distance.compute(50, -3, cfg), Distance.compute(50, 0, cfg))
-		Assert.eq(Distance.compute(50, 7, cfg), Distance.compute(50, 1, cfg))
+		Assert.eq((Distance.compute(50, -3, cfg)), (Distance.compute(50, 0, cfg)))
+		Assert.eq((Distance.compute(50, 7, cfg)), (Distance.compute(50, 1, cfg)))
 	end,
 
 	["bad timing from the client is treated as 0"] = function()
