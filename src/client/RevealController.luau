@@ -36,30 +36,31 @@ local function quality(mult: number): string
 	return "Weak"
 end
 
-local function flySeed(origin: Vector3, landPos: Vector3)
-	local seed = Instance.new("Part")
-	seed.Name = "Seed"
-	seed.Shape = Enum.PartType.Ball
-	seed.Size = Vector3.new(1.2, 1.2, 1.2)
-	seed.Color = Color3.fromRGB(150, 100, 50)
-	seed.Material = Enum.Material.Neon
-	seed.Anchored = true
-	seed.CanCollide = false
-	seed.CanQuery = false
-	seed.Parent = Workspace
+local function flyProjectile(origin: Vector3, landPos: Vector3)
+	local s = Config.Projectile.size
+	local projectile = Instance.new("Part")
+	projectile.Name = Config.Projectile.name
+	projectile.Shape = Enum.PartType.Ball
+	projectile.Size = Vector3.new(s, s, s)
+	projectile.Color = Color3.fromHex(Config.Projectile.color)
+	projectile.Material = Enum.Material.Neon
+	projectile.Anchored = true
+	projectile.CanCollide = false
+	projectile.CanQuery = false
+	projectile.Parent = Workspace
 
 	local trail = Instance.new("Trail")
 	local a0 = Instance.new("Attachment")
 	a0.Position = Vector3.new(0, 0.4, 0)
-	a0.Parent = seed
+	a0.Parent = projectile
 	local a1 = Instance.new("Attachment")
 	a1.Position = Vector3.new(0, -0.4, 0)
-	a1.Parent = seed
+	a1.Parent = projectile
 	trail.Attachment0 = a0
 	trail.Attachment1 = a1
 	trail.Lifetime = 0.4
 	trail.Color = ColorSequence.new(Color3.fromRGB(255, 240, 180))
-	trail.Parent = seed
+	trail.Parent = projectile
 
 	local duration = Config.Throw.arcSeconds
 	local height = Config.Throw.arcHeight
@@ -68,10 +69,10 @@ local function flySeed(origin: Vector3, landPos: Vector3)
 	conn = RunService.RenderStepped:Connect(function()
 		local t = math.min((os.clock() - start) / duration, 1)
 		local flat = origin:Lerp(landPos, t)
-		seed.Position = flat + Vector3.new(0, 4 * height * t * (1 - t), 0)
+		projectile.Position = flat + Vector3.new(0, 4 * height * t * (1 - t), 0)
 		if t >= 1 then
 			conn:Disconnect()
-			seed:Destroy()
+			projectile:Destroy()
 		end
 	end)
 end
@@ -130,7 +131,7 @@ function RevealController.init(hud: Hud.Hud, throwResult: RemoteEvent)
 		local def = Config.Creatures[result.creatureId]
 		local rarityColor = Color3.fromHex(Config.RarityColors[def.rarity])
 
-		flySeed(result.origin, result.landPos)
+		flyProjectile(result.origin, result.landPos)
 		hud.reveal.TextColor3 = Color3.new(1, 1, 1)
 		hud.reveal.Text = string.format("%s  %.1f studs", quality(result.mult), result.distance)
 		hud.revealSub.Text = zoneName(result.zoneId)

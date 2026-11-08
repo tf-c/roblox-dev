@@ -82,7 +82,7 @@ local function sprout(player: Player, token: number, creatureId: string, landPos
 
 	if Config.CollectMode == "walk" then
 		local prompt = Instance.new("ProximityPrompt")
-		prompt.ActionText = "Collect"
+		prompt.ActionText = Config.Text.collectAction
 		prompt.ObjectText = Config.Creatures[creatureId].name
 		prompt.HoldDuration = 0
 		prompt.MaxActivationDistance = 12
@@ -112,7 +112,7 @@ local function sprout(player: Player, token: number, creatureId: string, landPos
 	-- Never let an ignored critter block throwing forever.
 	task.delay(Config.PendingTimeoutSeconds, function()
 		if takePending(player, token) then
-			Remotes.toast(player, Config.Creatures[creatureId].name .. " wandered off")
+			Remotes.toast(player, string.format(Config.Text.wanderedOff, Config.Creatures[creatureId].name))
 		end
 	end)
 end
@@ -123,7 +123,7 @@ local function onThrow(player: Player, timing: any)
 		return
 	end
 	if state.pending then
-		Remotes.toast(player, "Collect your critter first")
+		Remotes.toast(player, Config.Text.pendingBlocked)
 		return
 	end
 	local now = os.clock()

@@ -84,6 +84,19 @@ Config.RarityColors = {
 	epic = "#c45cff",
 }
 
+-- Player-facing theme words. The reskin changes these, not code. %s = creature name.
+Config.Text = {
+	collectAction = "Collect",
+	pendingBlocked = "Collect your critter first",
+	wanderedOff = "%s wandered off",
+	walkHint = "Walk to your critter to collect it",
+	plotReleased = "Plot full: %s was released",
+	plotReplaced = "Plot full: %s replaced %s",
+}
+
+-- The thing the player throws down the lane (client visual only).
+Config.Projectile = { name = "Seed", color = "#966432", size = 1.2 }
+
 Config.Train = {
 	powerPerTrain = 1,
 	maxPerSecond = 8,

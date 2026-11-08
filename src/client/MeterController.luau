@@ -65,9 +65,7 @@ function MeterController.init(hud: Hud.Hud, throwRemote: RemoteEvent)
 		hud.meter.BackgroundTransparency = if dim then 0.6 else 0.2
 		hud.throwButton.BackgroundTransparency = if isReady then 0 else 0.5
 		if player:GetAttribute("HasPending") and now >= frozenUntil then
-			hud.meterHint.Text = if Config.CollectMode == "walk"
-				then "Walk to your critter to collect it"
-				else ""
+			hud.meterHint.Text = if Config.CollectMode == "walk" then Config.Text.walkHint else ""
 		elseif isReady then
 			hud.meterHint.Text = "Stop the marker in the green"
 		else

@@ -92,7 +92,7 @@ function PlotService.place(player: Player, creatureId: string)
 	local name = Config.Creatures[creatureId].name
 	local slot = Plot.choose(state.plot, creatureId, Config.CreatureIncome, slotCount(state))
 	if slot == nil then
-		notify(player, string.format("Plot full: %s was released", name))
+		notify(player, string.format(Config.Text.plotReleased, name))
 		return
 	end
 
@@ -101,7 +101,7 @@ function PlotService.place(player: Player, creatureId: string)
 	showCritter(plot, slot, creatureId)
 	PlayerState.sync(player)
 	if replaced then
-		notify(player, string.format("Plot full: %s replaced %s", name, Config.Creatures[replaced].name))
+		notify(player, string.format(Config.Text.plotReplaced, name, Config.Creatures[replaced].name))
 	end
 end
 

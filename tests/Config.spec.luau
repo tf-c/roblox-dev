@@ -68,4 +68,38 @@ return {
 			end
 		end
 	end,
+
+	["every theme text is a non-empty string"] = function()
+		for _, key in
+			{ "collectAction", "pendingBlocked", "wanderedOff", "walkHint", "plotReleased", "plotReplaced" }
+		do
+			local text = Config.Text[key]
+			Assert.truthy(type(text) == "string" and #text > 0, key)
+		end
+	end,
+
+	["theme text has the right number of %s slots"] = function()
+		local expected: { [string]: number } = {
+			wanderedOff = 1,
+			plotReleased = 1,
+			plotReplaced = 2,
+			collectAction = 0,
+			pendingBlocked = 0,
+			walkHint = 0,
+		}
+		for key, count in expected do
+			Assert.eq(
+				select(2, string.gsub((Config.Text :: { [string]: string })[key], "%%s", "")),
+				count,
+				key
+			)
+		end
+	end,
+
+	["projectile look is valid"] = function()
+		local p = Config.Projectile
+		Assert.truthy(type(p.name) == "string" and #p.name > 0, "name")
+		Assert.truthy(p.size > 0, "size")
+		Assert.truthy(string.match(p.color, "^#%x%x%x%x%x%x$") ~= nil, "color")
+	end,
 }
