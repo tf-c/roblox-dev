@@ -71,7 +71,17 @@ Config.Creatures = {
 -- accessoryIds: extra catalog accessories (e.g. cat ears) added on top of the bundle's outfit.
 -- Keep every look fully clothed: no collars, leashes, chains or chokers.
 export type CreatureBundle = { bundleId: number, accessoryIds: { number }? }
-Config.CreatureBundles = {} :: { [string]: CreatureBundle }
+-- All items are Roblox-made (free bodies; Kitty Ears 1374269, Fuchsia Kitty Ears 22070807,
+-- Purple Cat Ears Headphones 244159564; Orange 187846604, Grey 170892848, Rainbow 212358027 cat tails).
+-- Avoid Oakley/John/Casey: their left leg detaches when the rig is anchored.
+Config.CreatureBundles = {
+	pillow = { bundleId = 722, accessoryIds = { 1374269, 187846604 } }, -- Denny
+	slipper = { bundleId = 605, accessoryIds = { 22070807, 170892848 } }, -- Dennis
+	pickle = { bundleId = 608, accessoryIds = { 1374269, 170892848 } }, -- Kenneth
+	caramel = { bundleId = 109, accessoryIds = { 1374269, 187846604 } }, -- ROBLOX Boy
+	satin = { bundleId = 573, accessoryIds = { 1374269, 170892848 } }, -- Oliver
+	linden = { bundleId = 572, accessoryIds = { 244159564, 212358027 } }, -- Summer
+} :: { [string]: CreatureBundle }
 
 -- Derived lookup for Income.perSecond: creature id -> cash per second.
 Config.CreatureIncome = {} :: { [string]: number }
