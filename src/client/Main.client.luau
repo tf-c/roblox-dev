@@ -36,7 +36,7 @@ local function refresh()
 		powerValue.Value,
 		cashValue.Value,
 		(player:GetAttribute("PlotCount") or 0) :: number,
-		(player:GetAttribute("PlotSlots") or Config.Plot.slots) :: number
+		Config.Plot.slots
 	)
 	local upgraded = player:GetAttribute("Upgraded") == true
 	hud.upgrade.Visible = not upgraded

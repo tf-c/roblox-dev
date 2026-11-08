@@ -3,10 +3,6 @@
 -- leaderstats mirror Power and Cash; attributes on the Player tell the client
 -- what it can do (HasPending, Upgraded, PlotCount).
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
-local Config = require(ReplicatedStorage.Shared.Config)
-
 export type Pending = {
 	token: number,
 	creatureId: string,
@@ -33,7 +29,7 @@ local function makeStat(parent: Instance, name: string): IntValue
 	return value
 end
 
-function PlayerState.add(player: Player): State
+function PlayerState.add(player: Player)
 	local state: State = {
 		power = 0,
 		cash = 0,
@@ -51,7 +47,6 @@ function PlayerState.add(player: Player): State
 	leaderstats.Parent = player
 
 	PlayerState.sync(player)
-	return state
 end
 
 function PlayerState.get(player: Player): State?
@@ -94,7 +89,6 @@ function PlayerState.sync(player: Player)
 	player:SetAttribute("HasPending", state.pending ~= nil)
 	player:SetAttribute("Upgraded", state.upgraded)
 	player:SetAttribute("PlotCount", count)
-	player:SetAttribute("PlotSlots", Config.Plot.slots)
 end
 
 return PlayerState

@@ -18,7 +18,6 @@ local CritterVisual = require(script.Parent.CritterVisual)
 local MapBuilder = require(script.Parent.MapBuilder)
 local PlayerState = require(script.Parent.PlayerState)
 local PlotService = require(script.Parent.PlotService)
-local RateLimit = require(script.Parent.RateLimit)
 
 local ThrowService = {}
 
@@ -27,8 +26,6 @@ local function nextNumber(): number
 	return rng:NextNumber()
 end
 
--- Backstop against remote spam; the real pacing is the cooldown below.
-local limiter = RateLimit.new(2, 3)
 local nextToken = 0
 local notifyRemote: RemoteEvent? = nil
 local fieldFolder: Folder? = nil
@@ -120,7 +117,7 @@ end
 
 local function onThrow(throwResult: RemoteEvent, player: Player, timing: any)
 	local state = PlayerState.get(player)
-	if not state or not limiter:allow(player) then
+	if not state then
 		return
 	end
 	if state.pending then
@@ -168,10 +165,6 @@ function ThrowService.init(throwRemote: RemoteEvent, throwResult: RemoteEvent, n
 	throwRemote.OnServerEvent:Connect(function(player: Player, timing: any)
 		onThrow(throwResult, player, timing)
 	end)
-end
-
-function ThrowService.forget(player: Player)
-	limiter:forget(player)
 end
 
 return ThrowService

@@ -163,7 +163,7 @@ function MapBuilder.buildPlot(index: number, ownerName: string): (Model, { BaseP
 		table.insert(pedestals, ped)
 	end
 
-	model.Parent = mapFolder or MapBuilder.build()
+	model.Parent = assert(mapFolder, "MapBuilder.build() must run before buildPlot")
 	return model, pedestals
 end
 

@@ -10,8 +10,6 @@ local CritterVisual = require(script.Parent.CritterVisual)
 local MapBuilder = require(script.Parent.MapBuilder)
 local PlayerState = require(script.Parent.PlayerState)
 
-export type PlaceResult = "placed" | "replaced" | "released"
-
 type PlotVisual = {
 	index: number,
 	model: Model,
@@ -70,11 +68,11 @@ end
 
 -- Put a critter on the player's plot. If the plot is full, it replaces the
 -- lowest-income critter only when it earns more; otherwise it is released.
-function PlotService.place(player: Player, creatureId: string): PlaceResult
+function PlotService.place(player: Player, creatureId: string)
 	local state = PlayerState.get(player)
 	local plot = plots[player]
 	if not state or not plot then
-		return "released"
+		return
 	end
 
 	for slot = 1, Config.Plot.slots do
@@ -82,7 +80,7 @@ function PlotService.place(player: Player, creatureId: string): PlaceResult
 			state.plot[slot] = creatureId
 			showCritter(plot, slot, creatureId)
 			PlayerState.sync(player)
-			return "placed"
+			return
 		end
 	end
 
@@ -100,11 +98,10 @@ function PlotService.place(player: Player, creatureId: string): PlaceResult
 		showCritter(plot, worstSlot, creatureId)
 		PlayerState.sync(player)
 		notify(player, string.format("Plot full: %s replaced %s", Config.Creatures[creatureId].name, oldName))
-		return "replaced"
+		return
 	end
 
 	notify(player, string.format("Plot full: %s was released", Config.Creatures[creatureId].name))
-	return "released"
 end
 
 -- Where a critter flies to in auto-collect mode.
