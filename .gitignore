@@ -11,6 +11,9 @@ Packages/
 ServerPackages/
 DevPackages/
 
+# Roblox type definitions for luau-lsp (downloaded)
+globalTypes.d.luau
+
 # Editor / OS
 .vscode/
 .DS_Store
