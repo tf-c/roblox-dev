@@ -95,6 +95,21 @@ function Outfit.pickOutfitId(items: { BundleItem }): number?
 	return nil
 end
 
+-- Catalog AssetTypeId -> Enum.AccessoryType name, for rigid accessories. nil = not an accessory.
+local SLOTS: { [number]: string } = {
+	[8] = "Hat",
+	[41] = "Hair",
+	[42] = "Face",
+	[43] = "Neck",
+	[44] = "Shoulder",
+	[45] = "Front",
+	[46] = "Back",
+	[47] = "Waist",
+}
+function Outfit.accessorySlot(assetTypeId: number): string?
+	return SLOTS[assetTypeId]
+end
+
 -- Appends asset ids to a HumanoidDescription comma-separated accessory string.
 function Outfit.withAccessories(existing: string, extra: { number }): string
 	local parts = if existing == "" then {} else { existing }

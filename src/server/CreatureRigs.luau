@@ -6,6 +6,7 @@
 --   require(game.ServerScriptService.Server.CreatureRigs).saveModel("pillow")
 
 local AssetService = game:GetService("AssetService")
+local MarketplaceService = game:GetService("MarketplaceService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
@@ -100,6 +101,18 @@ local function describe(look: Config.CreatureLook): (HumanoidDescription?, strin
 	return base:Clone(), ""
 end
 
+-- The accessory slot for a catalog id (cached; web call). Falls back to Hat if the lookup fails.
+local slots: { [number]: string } = {}
+local function accessorySlot(assetId: number): string
+	if not slots[assetId] then
+		local ok, info = retry(function()
+			return MarketplaceService:GetProductInfo(assetId, Enum.InfoType.Asset)
+		end)
+		slots[assetId] = ok and Outfit.accessorySlot(info.AssetTypeId) or "Hat"
+	end
+	return slots[assetId]
+end
+
 local SKIN_PARTS =
 	{ "HeadColor", "TorsoColor", "LeftArmColor", "RightArmColor", "LeftLegColor", "RightLegColor" }
 local SCALE_PROPERTIES: { [string]: string } = {
@@ -125,7 +138,16 @@ local function applyOverrides(desc: HumanoidDescription, look: Config.CreatureLo
 		desc:SetAccessories(kept, true)
 	end
 	if look.accessoryIds then
-		desc.HatAccessory = Outfit.withAccessories(desc.HatAccessory, look.accessoryIds)
+		-- Each id goes in its own slot: Roblox drops a face or shoulder item put in HatAccessory.
+		local list = desc:GetAccessories(true)
+		for _, id in look.accessoryIds do
+			table.insert(list, {
+				AssetId = id,
+				AccessoryType = (Enum.AccessoryType :: any)[accessorySlot(id)],
+				IsLayered = false,
+			})
+		end
+		desc:SetAccessories(list, true)
 	end
 	if look.shirt then
 		desc.Shirt = look.shirt

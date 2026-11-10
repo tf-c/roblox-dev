@@ -86,4 +86,13 @@ return {
 	["an empty manual look has no properties"] = function()
 		Assert.eq(next(Outfit.manualProperties({})), nil)
 	end,
+
+	["catalog asset types map to accessory slots"] = function()
+		Assert.eq(Outfit.accessorySlot(8), "Hat")
+		Assert.eq(Outfit.accessorySlot(41), "Hair")
+		Assert.eq(Outfit.accessorySlot(42), "Face")
+		Assert.eq(Outfit.accessorySlot(44), "Shoulder")
+		Assert.eq(Outfit.accessorySlot(47), "Waist")
+		Assert.eq(Outfit.accessorySlot(11), nil) -- a shirt is not an accessory
+	end,
 }
