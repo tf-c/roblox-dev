@@ -43,8 +43,9 @@ Other skills. Use these when relevant, or when I name them:
 - If you can't verify something, tell me so. Don't claim it works.
 
 ## Persistent Context (Obsidian vault)
-The repo is an Obsidian vault. Notes live in `notes/`.
-- At the start of a task, read `notes/CONTEXT.md`. Open other notes only when the task needs them.
+The repo is an Obsidian vault and is the source of project context. Notes live in `notes/`.
+- Start every session from the vault, not from exploring the code: read `notes/CONTEXT.md` and the memory index, then open only the notes, plans and files the task needs.
+- Prefer the `obsidian` CLI for vault search, backlinks and tags when it's on PATH (it's allowed in `.claude/settings.local.json`). Otherwise use the normal file tools.
 - At the end of a task, update the "Now" section of `notes/CONTEXT.md` (a few lines, not a log).
 - Auto memory is stored in `notes/memory/` (the `~/.claude` memory path is a junction to it). Save lasting decisions there, one per note, linked with `[[name]]`.
 

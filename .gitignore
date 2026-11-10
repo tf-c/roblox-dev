@@ -25,3 +25,5 @@ Thumbs.db
 # Obsidian: per-device layout and plugin data (may hold sync credentials)
 .obsidian/workspace.json
 .obsidian/plugins/*/data.json
+.obsidian/plugins/*/*.log
+.obsidian/plugins/mcp-tools-istefox/
