@@ -42,6 +42,12 @@ Other skills. Use these when relevant, or when I name them:
 - For frontend changes, open the app in the browser, click through the change, and take screenshots to confirm it looks and works right.
 - If you can't verify something, tell me so. Don't claim it works.
 
+## Persistent Context (Obsidian vault)
+The repo is an Obsidian vault. Notes live in `notes/`.
+- At the start of a task, read `notes/CONTEXT.md`. Open other notes only when the task needs them.
+- At the end of a task, update the "Now" section of `notes/CONTEXT.md` (a few lines, not a log).
+- Auto memory is stored in `notes/memory/` (the `~/.claude` memory path is a junction to it). Save lasting decisions there, one per note, linked with `[[name]]`.
+
 ## Context & Token Efficiency
 - Stay focused: only read files and sources the task needs. No exploratory tangents.
 - If my prompt is vague, ask a short clarifying question instead of reading the whole codebase to guess.
