@@ -43,11 +43,12 @@ Other skills. Use these when relevant, or when I name them:
 - If you can't verify something, tell me so. Don't claim it works.
 
 ## Persistent Context (Obsidian vault)
-The repo is an Obsidian vault and is the source of project context. Notes live in `notes/`.
-- Start every session from the vault, not from exploring the code: read `notes/CONTEXT.md` and the memory index, then open only the notes, plans and files the task needs.
+Project context and memory live only in the vault at `C:\Users\pi\Documents\General Roblox Development`, not in this repo. Follow the vault's `CLAUDE.md`.
+- Start every session from the vault, not from exploring the code: read `VAULT-INDEX.md`, `memory/MEMORY.md` and `projects/roblox-dev/CONTEXT.md` there, then open only the notes, plans and files the task needs.
 - Prefer the `obsidian` CLI for vault search, backlinks and tags when it's on PATH (it's allowed in `.claude/settings.local.json`). Otherwise use the normal file tools.
-- At the end of a task, update the "Now" section of `notes/CONTEXT.md` (a few lines, not a log).
-- Auto memory is stored in `notes/memory/` (the `~/.claude` memory path is a junction to it). Save lasting decisions there, one per note, linked with `[[name]]`.
+- At the end of a task, update the "Now" section of the vault's `projects/roblox-dev/CONTEXT.md` (a few lines, not a log).
+- Auto memory is stored in the vault's `memory/` folder (the `~/.claude` memory path is a junction to it). Save lasting decisions there, one per note, linked with `[[name]]`.
+- Don't add notes, `.obsidian/` or memory files to this repo.
 
 ## Context & Token Efficiency
 - Stay focused: only read files and sources the task needs. No exploratory tangents.

@@ -1,1 +1,0 @@
-- [Seed toss design decisions](seed-toss-design-decisions.md): seed theme, Power never sold, walk/auto collect flag, Rojo+Lune toolchain

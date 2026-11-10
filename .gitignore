@@ -22,8 +22,6 @@ Thumbs.db
 # Handoff notes written by the handoff skill
 .scratch/
 
-# Obsidian: per-device layout and plugin data (may hold sync credentials)
-.obsidian/workspace.json
-.obsidian/plugins/*/data.json
-.obsidian/plugins/*/*.log
-.obsidian/plugins/mcp-tools-istefox/
+# Project notes live in the Obsidian vault in Documents, not here
+.obsidian/
+notes/
