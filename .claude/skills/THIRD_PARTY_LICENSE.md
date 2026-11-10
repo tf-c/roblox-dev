@@ -1,4 +1,6 @@
-Skills in this folder are copied from https://github.com/AshExplained/roblox-skills (commit a3a7b94) under the MIT License below.
+Skills in this folder are copied from https://github.com/AshExplained/roblox-skills (commit a3a7b94) under the MIT License below,
+except those listed in THIRD_PARTY_LICENSE-mattpocock.md, THIRD_PARTY_LICENSE-ponytail.md,
+THIRD_PARTY_LICENSE-improve.md and THIRD_PARTY_NOTICE-bangle-io.md.
 
 MIT License
 
